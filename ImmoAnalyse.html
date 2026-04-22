@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ImmoAnalyse · Wüest Partner</title>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FTK322V1MR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-FTK322V1MR');
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    :root {
+      --gold:#C9A84C; --gold-dim:#8a6f2e; --gold-bg:rgba(201,168,76,0.08);
+      --bg:#0C0F16; --surface:#141820; --surface2:#1C2130; --border:#252C3D;
+      --text:#E4DDD0; --muted:#6B7280; --faint:#2A3148;
+      --green:#3DAA77; --red:#D95C5C;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{background:var(--bg);font-family:'DM Sans',sans-serif;color:var(--text);}
+    /* LAYOUT */
+    .app{min-height:100vh;}
+    .header{padding:1.5rem 2rem;max-width:1100px;margin:0 auto;display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:1rem;border-bottom:1px solid var(--border);}
+    .header h1{font-family:'Cormorant Garamond',serif;font-size:2rem;font-weight:600;line-height:1;}
+    .header h1 span{color:var(--gold);}
+    .header p{font-size:0.75rem;color:var(--muted);margin-top:0.25rem;}
+    .wp-chip{display:flex;align-items:center;gap:0.5rem;background:var(--gold-bg);border:1px solid var(--gold-dim);border-radius:8px;padding:0.4rem 0.85rem;font-size:0.72rem;color:var(--gold);}
+    /* TABS */
+    .tabs{max-width:1100px;margin:0 auto;padding:0 2rem;border-bottom:1px solid var(--border);display:flex;overflow-x:auto;gap:0;}
+    .tab{padding:0.85rem 1.25rem;font-size:0.8rem;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:color .2s,border-color .2s;user-select:none;}
+    .tab:hover{color:var(--text);}
+    .tab.on{color:var(--gold);border-bottom-color:var(--gold);}
+    .tn{display:inline-flex;align-items:center;justify-content:center;width:17px;height:17px;border-radius:50%;background:var(--faint);font-size:0.62rem;margin-right:0.35rem;color:var(--muted);}
+    .tab.on .tn{background:var(--gold-bg);color:var(--gold);}
+    /* MAIN */
+    .main{max-width:1100px;margin:0 auto;padding:2rem;display:grid;grid-template-columns:1fr;gap:0;}
+    /* SPLIT LAYOUT for result tab */
+    .split{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;}
+    @media(max-width:800px){.split{grid-template-columns:1fr;}}
+    /* CARDS */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.6rem;margin-bottom:1.2rem;}
+    .ct{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;color:var(--gold);margin-bottom:1.1rem;display:flex;align-items:center;gap:0.5rem;}
+    .ct::before{content:'';width:3px;height:1em;background:var(--gold);border-radius:2px;flex-shrink:0;}
+    .cs{font-size:0.73rem;color:var(--muted);margin-top:-0.75rem;margin-bottom:1.1rem;}
+    /* GRIDS */
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem;}
+    .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:1rem;}
+    @media(max-width:640px){.g2,.g3{grid-template-columns:1fr;}}
+    /* FIELDS */
+    .f{display:flex;flex-direction:column;gap:0.3rem;}
+    .f label{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:500;}
+    .f input,.f select{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:0.55rem 0.8rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.88rem;width:100%;transition:border-color .2s;}
+    .f input:focus,.f select:focus{outline:none;border-color:var(--gold);}
+    .f select option{background:var(--surface);}
+    .hint{font-size:0.65rem;color:var(--muted);margin-top:0.1rem;}
+    /* BUTTONS */
+    .btg{display:flex;gap:0.4rem;flex-wrap:wrap;}
+    .bt{padding:0.4rem 0.9rem;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.8rem;cursor:pointer;transition:all .18s;white-space:nowrap;}
+    .bt:hover{border-color:var(--gold-dim);color:var(--text);}
+    .bt.on{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);}
+    .bt.sm{padding:0.25rem 0.6rem;font-size:0.72rem;}
+    /* TYPE CARDS */
+    .tg{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1.25rem;}
+    .tc{background:var(--bg);border:1px solid var(--border);border-radius:11px;padding:1rem 0.6rem;cursor:pointer;text-align:center;transition:all .2s;}
+    .tc:hover{border-color:var(--gold-dim);}
+    .tc.on{border-color:var(--gold);background:var(--gold-bg);}
+    .tc-i{font-size:1.5rem;margin-bottom:0.3rem;}
+    .tc-l{font-size:0.75rem;font-weight:500;color:var(--muted);}
+    .tc.on .tc-l{color:var(--gold);}
+    /* SEGMENT PILLS */
+    .sp{display:flex;gap:0.35rem;flex-wrap:wrap;}
+    .pill{padding:0.25rem 0.7rem;border-radius:20px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-size:0.72rem;cursor:pointer;transition:all .18s;}
+    .pill.on{border-color:var(--gold);background:var(--gold-bg);color:var(--gold);}
+    /* DROPZONE */
+    .dz{border:2px dashed var(--border);border-radius:11px;padding:2rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+    .dz:hover,.dz.drag{border-color:var(--gold);background:var(--gold-bg);}
+    .dz p{color:var(--muted);font-size:0.82rem;margin-top:0.4rem;}
+    .dz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    /* REPORT LIST */
+    .rl{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.85rem;}
+    .ri{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:0.75rem 0.9rem;cursor:pointer;transition:all .2s;}
+    .ri:hover{border-color:var(--gold-dim);}
+    .ri.on{border-color:var(--gold);background:var(--gold-bg);}
+    .ri-n{font-size:0.85rem;font-weight:500;}
+    .ri-m{font-size:0.68rem;color:var(--muted);}
+    .ri-b{font-size:0.65rem;background:var(--gold-bg);border:1px solid var(--gold-dim);color:var(--gold);padding:0.15rem 0.5rem;border-radius:4px;}
+    .db{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.9rem;padding:0.2rem;transition:color .2s;}
+    .db:hover{color:var(--red);}
+    /* MIX TABLE */
+    .mt{width:100%;border-collapse:collapse;}
+    .mt th{font-size:0.65rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);text-align:left;padding:0.45rem 0.6rem;border-bottom:1px solid var(--border);}
+    .mt td{padding:0.45rem 0.45rem;border-bottom:1px solid var(--faint);vertical-align:middle;}
+    .mt tr:last-child td{border-bottom:none;}
+    .mt input{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:0.35rem 0.55rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;width:100%;}
+    .mt input:focus{outline:none;border-color:var(--gold);}
+    /* TOGGLE */
+    .tog{position:relative;width:32px;height:18px;cursor:pointer;flex-shrink:0;}
+    .tog input{opacity:0;width:0;height:0;position:absolute;}
+    .ts{position:absolute;inset:0;background:var(--border);border-radius:9px;transition:.2s;}
+    .ts::before{content:'';position:absolute;width:12px;height:12px;left:3px;top:3px;background:var(--muted);border-radius:50%;transition:.2s;}
+    .tog input:checked+.ts{background:var(--gold-dim);}
+    .tog input:checked+.ts::before{transform:translateX(14px);background:var(--gold);}
+    /* HERO */
+    .hero{background:linear-gradient(135deg,var(--surface),var(--surface2));border:1px solid var(--gold-dim);border-radius:15px;padding:1.75rem;margin-bottom:1.25rem;}
+    .hero-top{display:flex;justify-content:space-between;flex-wrap:wrap;gap:1.5rem;margin-bottom:1.25rem;}
+    .hl{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted);margin-bottom:0.35rem;}
+    .hv{font-family:'Cormorant Garamond',serif;font-size:2.4rem;font-weight:600;color:var(--gold);line-height:1;}
+    .hs{font-size:0.8rem;color:var(--muted);margin-top:0.25rem;}
+    .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:0.85rem;}
+    @media(max-width:700px){.kpis{grid-template-columns:1fr 1fr;}}
+    .kpi{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:0.85rem;}
+    .kl{font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:0.25rem;}
+    .kv{font-size:1rem;font-weight:600;color:var(--text);}
+    .kv.g{color:var(--gold);}
+    .kv.gr{color:var(--green);}
+    .kv.re{color:var(--red);}
+    .ks{font-size:0.63rem;color:var(--muted);margin-top:0.1rem;}
+    /* DATA TABLE */
+    .dt{width:100%;border-collapse:collapse;}
+    .dt th{font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);text-align:right;padding:0.45rem 0.65rem;border-bottom:1px solid var(--border);}
+    .dt th:first-child{text-align:left;}
+    .dt td{font-size:0.82rem;padding:0.5rem 0.65rem;border-bottom:1px solid var(--faint);text-align:right;color:var(--text);}
+    .dt td:first-child{text-align:left;color:var(--muted);}
+    .dt tr.tot td{border-top:1px solid var(--border);border-bottom:none;font-weight:600;color:var(--text);padding-top:0.7rem;}
+    .dt tr.tot td:first-child{color:var(--text);}
+    .dt td.pos{color:var(--green);}
+    .dt td.neg{color:var(--red);}
+    .dt td.gd{color:var(--gold);font-weight:600;}
+    .dt tr.sect td{font-size:0.62rem;color:var(--muted);padding-top:0.75rem;text-transform:uppercase;letter-spacing:0.08em;}
+    /* MISC */
+    .ib{background:var(--faint);border-radius:7px;padding:0.65rem 0.9rem;font-size:0.74rem;color:var(--muted);line-height:1.5;margin-top:0.65rem;}
+    .ib b{color:var(--gold);}
+    .hr{border:none;border-top:1px solid var(--border);margin:1.1rem 0;}
+    .badge{display:inline-block;padding:0.18rem 0.55rem;border-radius:4px;font-size:0.65rem;font-weight:600;letter-spacing:0.04em;}
+    .badge.g{background:var(--gold-bg);border:1px solid var(--gold-dim);color:var(--gold);}
+    .badge.gr{background:rgba(61,170,119,0.1);border:1px solid rgba(61,170,119,0.3);color:var(--green);}
+    .sec{font-size:0.67rem;text-transform:uppercase;letter-spacing:0.09em;color:var(--muted);margin:1.1rem 0 0.6rem;display:flex;align-items:center;gap:0.6rem;}
+    .sec::after{content:'';flex:1;height:1px;background:var(--border);}
+    /* NAV */
+    .nav{display:flex;justify-content:space-between;gap:1rem;margin-top:1.25rem;}
+    .nb{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:0.7rem 1.4rem;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--muted);cursor:pointer;transition:all .2s;}
+    .nb:hover{border-color:var(--gold-dim);color:var(--text);}
+    .nn{background:linear-gradient(135deg,var(--gold),var(--gold-dim));border:none;border-radius:9px;padding:0.7rem 1.4rem;font-family:'DM Sans',sans-serif;font-size:0.85rem;font-weight:600;color:var(--bg);cursor:pointer;flex:1;transition:opacity .2s;}
+    .nn:hover{opacity:.9;}
+    /* LIVE INDICATOR */
+    .live-dot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;margin-right:0.4rem;animation:pulse 2s infinite;}
+    @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+    /* RENDITE ROWS */
+    .rr{display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--faint);}
+    .rr:last-child{border-bottom:none;}
+    .rr-l{font-size:0.82rem;}
+    .rr-s{font-size:0.67rem;color:var(--muted);}
+    .rr-v{font-size:1.05rem;font-weight:600;}
+    /* MARKET ROWS */
+    .mr{display:flex;justify-content:space-between;font-size:0.8rem;padding:0.38rem 0;border-bottom:1px solid var(--faint);}
+    .mr:last-child{border-bottom:none;}
+    .ml{color:var(--muted);}
+    /* SANIERUNG */
+    .san-bar{display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;padding:0.85rem 1rem;background:var(--bg);border:1px solid var(--border);border-radius:9px;transition:border-color .2s;margin-top:1rem;}
+    .san-bar:hover{border-color:var(--gold-dim);}
+    .san-bar.open{border-color:var(--gold);border-bottom-left-radius:0;border-bottom-right-radius:0;}
+    .san-bar-left{display:flex;align-items:center;gap:0.75rem;}
+    .san-bar-title{font-size:0.88rem;font-weight:500;color:var(--text);}
+    .san-bar-total{font-size:0.88rem;font-weight:600;color:var(--gold);}
+    .san-bar-arrow{font-size:0.75rem;color:var(--muted);transition:transform .2s;}
+    .san-bar.open .san-bar-arrow{transform:rotate(180deg);}
+    .san-body{background:var(--bg);border:1px solid var(--gold);border-top:none;border-radius:0 0 9px 9px;padding:1rem;}
+    .san-table{width:100%;border-collapse:collapse;margin-bottom:0.75rem;}
+    .san-table th{font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);text-align:left;padding:0.4rem 0.5rem;border-bottom:1px solid var(--border);}
+    .san-table th:last-child{text-align:right;}
+    .san-table th:nth-child(2),.san-table th:nth-child(3){text-align:right;}
+    .san-table td{padding:0.35rem 0.4rem;border-bottom:1px solid var(--faint);vertical-align:middle;}
+    .san-table tr:last-child td{border-bottom:none;}
+    .san-table input{background:var(--surface);border:1px solid var(--border);border-radius:5px;padding:0.3rem 0.5rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;width:100%;}
+    .san-table input:focus{outline:none;border-color:var(--gold);}
+    .san-table td:nth-child(2) input,.san-table td:nth-child(3) input{text-align:right;}
+    .san-table td:last-child{text-align:right;font-size:0.83rem;font-weight:500;color:var(--gold);white-space:nowrap;padding-right:0.5rem;}
+    .san-total-row{display:flex;justify-content:space-between;align-items:center;padding-top:0.6rem;border-top:1px solid var(--border);font-size:0.85rem;}
+    .san-total-label{color:var(--muted);}
+    .san-total-val{font-weight:700;color:var(--gold);font-size:0.95rem;}
+    .san-add-btn{background:none;border:1px dashed var(--border);border-radius:6px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.78rem;padding:0.3rem 0.75rem;cursor:pointer;transition:all .18s;width:100%;margin-bottom:0.5rem;}
+    .san-add-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
+    .san-del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.85rem;padding:0.15rem 0.3rem;transition:color .18s;}
+    .san-del-btn:hover{color:var(--red);}
+    /* MANUAL MODE */
+    .mode-toggle{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;margin-bottom:1.25rem;}
+    .mode-btn{padding:0.75rem 1rem;text-align:center;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.83rem;font-weight:500;color:var(--muted);background:var(--bg);transition:all .18s;border:none;user-select:none;}
+    .mode-btn.on.wp{background:var(--gold-bg);color:var(--gold);border-color:var(--gold);}
+    .mode-btn.on.manual{background:rgba(217,92,92,0.1);color:var(--red);}
+    .no-data{border-color:rgba(217,92,92,0.5)!important;background:rgba(217,92,92,0.05)!important;}
+    .no-data-badge{display:inline-flex;align-items:center;gap:0.3rem;font-size:0.67rem;color:var(--red);background:rgba(217,92,92,0.1);border:1px solid rgba(217,92,92,0.3);border-radius:4px;padding:0.15rem 0.5rem;margin-left:0.5rem;}
+    .pill.no-data-pill{border-color:rgba(217,92,92,0.4)!important;color:rgba(217,92,92,0.6)!important;cursor:not-allowed!important;}
+    .pill.no-data-pill.on{border-color:var(--red)!important;background:rgba(217,92,92,0.12)!important;color:var(--red)!important;}
+    .manual-alert{background:rgba(217,92,92,0.08);border:1px solid rgba(217,92,92,0.25);border-radius:8px;padding:0.65rem 0.9rem;font-size:0.75rem;color:var(--red);line-height:1.5;margin-bottom:1rem;display:flex;gap:0.5rem;align-items:flex-start;}
+  </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useMemo, useRef, useCallback } = React;
+
+// ─── DEMO REPORT ─────────────────────────────────────────────────────────────
+const DEMO = {
+  id:"suhr-2026-q1", name:"Suhr AG — Wüest Partner", gemeinde:"Suhr", kanton:"AG",
+  datum:"22.04.2026", quartal:"Q1/2026",
+  miete:{
+    "1.5":{p10:276,p30:317,p50:340,p70:363,p90:415,m2:35},
+    "2.5":{p10:231,p30:266,p50:284,p70:305,p90:347,m2:55},
+    "3.5":{p10:192,p30:222,p50:237,p70:254,p90:288,m2:80},
+    "4.5":{p10:178,p30:205,p50:219,p70:235,p90:267,m2:105},
+    "5.5":{p10:165,p30:190,p50:204,p70:219,p90:248,m2:130},
+    "6.5":{p10:158,p30:182,p50:195,p70:209,p90:239,m2:170},
+  },
+  etw:{p50:7980,p90:10100,yoy:5.8},
+  efh:{p10:4750,p30:6430,p50:7390,p70:8550,p90:10900,yoy:0.1},
+  boden:{efh:{p10:810,p50:1140,p90:1650},mfh:{p10:950,p50:1030,p90:1300}},
+  markt:{leerstandMFH:0.6,leerstandEFH:0.9,angebotMiete:3.5,angebotETW:3.6,angebotEFH:1.0,
+    bevWachstum3J:6.6,steuerlastPaare120k:8.8,rating_efh:4.4,rating_etw:4.3,rating_mfh:3.9,kapSatz:4.5}
+};
+
+const ZI = ["1.5","2.5","3.5","4.5","5.5","6.5"];
+const SEGS = ["p10","p30","p50","p70","p90"];
+const SLBL = {p10:"10%",p30:"30%",p50:"50%",p70:"70%",p90:"90%"};
+const ZUSTAND_OPT = ["Renovationsbedürftig","Einfacher Unterhalt","Gut","Sehr gut","Neuwertig"];
+const ZF = {"Renovationsbedürftig":0.82,"Einfacher Unterhalt":0.91,"Gut":1.0,"Sehr gut":1.08,"Neuwertig":1.17};
+
+function afn(bj){
+  const a=2025-parseInt(bj||1970);
+  if(a<=5)return 0.97;if(a<=15)return 0.93;if(a<=25)return 0.89;
+  if(a<=35)return 0.85;if(a<=45)return 0.80;if(a<=55)return 0.75;
+  if(a<=65)return 0.70;if(a<=75)return 0.65;if(a<=85)return 0.60;
+  if(a<=95)return 0.55;return 0.50;
+}
+function chf(n){
+  if(n==null||isNaN(n)||n===0)return"—";
+  const s=Math.abs(n);
+  let r=s>=1000000?(n/1000000).toFixed(3).replace(".","\u2019")+" Mio.":Math.round(n).toLocaleString("de-CH");
+  return"CHF\u00a0"+r;
+}
+function pct(n,d=2){if(n==null||isNaN(n))return"—";return n.toFixed(d)+"%";}
+
+const TABS=[
+  {l:"WP Import",i:"📂"},{l:"Objekt",i:"🏢"},{l:"Wohnungsmix",i:"🏘️"},
+  {l:"Kosten",i:"⚙️"},{l:"Ergebnis",i:"📊"},
+];
+
+const defaultMix=()=>ZI.map(zi=>({zi,anzahl:"",m2:"",seg:"p50",on:false,manMiete:""}));
+const defaultSan=()=>[
+  {id:1,beschrieb:"Fassadensanierung",einheit:"",anzahl:"",kosten:0},
+  {id:2,beschrieb:"Dach / Flachdach",einheit:"",anzahl:"",kosten:0},
+  {id:3,beschrieb:"Fenster & Türen",einheit:"",anzahl:"",kosten:0},
+];
+let sanId=4;
+
+function App(){
+  const [tab,setTab]=useState(0);
+  const [reports,setReports]=useState([DEMO]);
+  const [activeId,setActiveId]=useState(DEMO.id);
+  const [drag,setDrag]=useState(false);
+  const [manualMode,setManualMode]=useState(false);
+  const [sanOpen,setSanOpen]=useState(false);
+  const [sanPos,setSanPos]=useState(defaultSan());
+  const [form,setForm]=useState({
+    typ:"MFH",baujahr:"1960",zustand:"Gut",grundstueck:"",
+    wfEFH:"",zimEFH:"5",segEFH:"p50",kaufpreis:"",wfTotal:"",
+    mix:defaultMix(),
+    // Manual mode extras
+    manKapSatz:"4.5", manBodenPreis:"1140", manLeerstand:"1.0",
+    nkMode:"pct",nkPct:"1.5",nkCHF:"",
+    vwMode:"pct",vwPct:"3",vwCHF:"",
+    uhMode:"pct",uhPct:"1",uhCHF:"",
+    leerPct:"",
+    h1Pct:"66.7", h1Zins:"1.5",
+    h2Pct:"13.3", h2Zins:"2.2", h2Jahre:"15",
+    ekPctField:"20",
+  });
+  const fileRef=useRef();
+
+  const report=reports.find(r=>r.id===activeId)||reports[0];
+  const sf=(k,v)=>setForm(f=>({...f,[k]:v}));
+  const setMix=(idx,k,v)=>setForm(f=>({...f,mix:f.mix.map((m,i)=>i===idx?{...m,[k]:v}:m)}));
+
+  // ── SANIERUNG HELPERS ────────────────────────────────────────────────────
+  const setSan=(id,k,v)=>setSanPos(ps=>ps.map(p=>p.id===id?{...p,[k]:v}:p));
+  const addSanPos=()=>setSanPos(ps=>[...ps,{id:sanId++,beschrieb:"",einheit:"",anzahl:"",kosten:0}]);
+  const delSanPos=(id)=>setSanPos(ps=>ps.filter(p=>p.id!==id));
+  const sanTotal=useMemo(()=>sanPos.reduce((s,p)=>{
+    const ep=parseFloat(p.einheit)||0;
+    const anz=parseFloat(p.anzahl)||0;
+    return s+(ep&&anz?ep*anz:parseFloat(p.kosten)||0);
+  },0),[sanPos]);
+
+  // ── FILE IMPORT ──────────────────────────────────────────────────────────
+  const handleFile=useCallback(file=>{
+    if(!file)return;
+    const r=new FileReader();
+    r.onload=e=>{
+      let newR;
+      try{
+        const p=JSON.parse(e.target.result);
+        newR={...DEMO,...p,id:"imp-"+Date.now()};
+      }catch{
+        newR={...DEMO,id:"imp-"+Date.now(),name:file.name.replace(/\.[^.]+$/,""),datum:new Date().toLocaleDateString("de-CH")};
+      }
+      setReports(rs=>[...rs,newR]);
+      setActiveId(newR.id);
+    };
+    r.readAsText(file);
+  },[]);
+
+  // ── REACTIVE CALCULATION (useMemo = recalcs on every form change) ────────
+  const R=useMemo(()=>{
+    if(!report&&!manualMode)return null;
+    const af=afn(form.baujahr);
+    const zf=ZF[form.zustand]||1;
+    const kpInput=parseFloat(form.kaufpreis)||0;
+
+    // Fallback-Werte: WP-Daten oder manuelle Eingabe
+    const kapSatz=manualMode?(parseFloat(form.manKapSatz)||4.5):(report?.markt.kapSatz||4.5);
+    const bodenPreis=manualMode?(parseFloat(form.manBodenPreis)||1140):(report?.boden?.efh?.p50||1140);
+    const leerstandRef=manualMode?(parseFloat(form.manLeerstand)||1.0):(form.typ==="EFH"?report?.markt.leerstandEFH:report?.markt.leerstandMFH)||1.0;
+
+    // ── Kaufpreis ──
+    let kp=kpInput;
+    if(!kpInput){
+      if(form.typ==="EFH"){
+        const qm=parseFloat(form.wfEFH)||0;
+        const gf=parseFloat(form.grundstueck)||0;
+        const bp=manualMode?0:(report?.efh[form.segEFH]||report?.efh?.p50||0);
+        kp=qm*bp*af*zf+gf*bodenPreis;
+      } else if(form.typ==="ETW"){
+        const qm=parseFloat(form.wfEFH)||0;
+        const bp=manualMode?0:(report?.etw[form.segEFH]||report?.etw?.p50||0);
+        kp=qm*bp*af*zf;
+      }
+      // MFH: nach jsm
+    }
+
+    // ── Mietertrag aus Wohnungsmix ──
+    let ertrag=[], jsm=0;
+    form.mix.filter(m=>m.on&&m.anzahl&&m.m2).forEach(m=>{
+      const anz=parseFloat(m.anzahl)||0;
+      const qm=parseFloat(m.m2)||0;
+      let mMt=0;
+      if(manualMode){
+        // Manueller Modus: direkte CHF/Mt. Eingabe pro Einheit
+        mMt=(parseFloat(m.manMiete)||0)*anz;
+      } else {
+        const d=report?.miete[m.zi]; if(!d)return;
+        const mQm=d[m.seg]||d.p50;
+        mMt=mQm*qm/12*anz;
+      }
+      const jm=mMt*12;
+      jsm+=jm;
+      ertrag.push({zi:m.zi,anz,qm,seg:m.seg,mMt,jm,manual:manualMode});
+    });
+
+    if(form.typ==="MFH"&&!kpInput&&jsm>0){
+      kp=(jsm/(kapSatz/100))*af*zf;
+    }
+
+    // Kosten
+    const nkJ=form.nkMode==="pct"?kp*(parseFloat(form.nkPct)||0)/100:(parseFloat(form.nkCHF)||0)*12;
+    const vwJ=form.vwMode==="pct"?jsm*(parseFloat(form.vwPct)||0)/100:(parseFloat(form.vwCHF)||0)*12;
+    const uhJ=form.uhMode==="pct"?kp*(parseFloat(form.uhPct)||0)/100:(parseFloat(form.uhCHF)||0)*12;
+    const lpct=parseFloat(form.leerPct)||leerstandRef;
+    const lvJ=jsm*(lpct/100);
+    const totK=nkJ+vwJ+uhJ+lvJ;
+    const noi=jsm-totK;
+
+    // ── Finanzierung: 2 Hypotheken ──
+    const gi=kp+sanTotal;
+    const h1Pct=parseFloat(form.h1Pct)||66.7;
+    const h2Pct=parseFloat(form.h2Pct)||13.3;
+    const ekPct=Math.max(0,(100-h1Pct-h2Pct))/100;
+    const h1Betrag=gi*(h1Pct/100);
+    const h2Betrag=gi*(h2Pct/100);
+    const ekBetrag=gi*ekPct;
+    const h1ZinsJ=h1Betrag*(parseFloat(form.h1Zins)||0)/100;
+    const h2ZinsJ=h2Betrag*(parseFloat(form.h2Zins)||0)/100;
+    const h2Jahre=parseFloat(form.h2Jahre)||15;
+    const h2AmortJ=h2Betrag/h2Jahre;
+    const totalZinsJ=h1ZinsJ+h2ZinsJ;
+    const cashflowVorAmort=noi-totalZinsJ;
+    const cashflowNachAmort=noi-totalZinsJ-h2AmortJ;
+
+    // Renditen
+    const brutto=gi>0?(jsm/gi)*100:0;
+    const netto=gi>0?(noi/gi)*100:0;
+    const cfRend=gi>0?(cashflowVorAmort/gi)*100:0;
+    // EK-Rendite mit Tilgung: Cashflow nach Amort. ÷ EK (Liquiditätsbetrachtung)
+    const ekRend=ekBetrag>0?(cashflowNachAmort/ekBetrag)*100:0;
+    // EK-Rendite ohne Tilgung: Cashflow vor Amort. ÷ EK (Gesamtrenditebetrachtung, Tilgung = Vermögensaufbau)
+    const ekRendOhneAmort=ekBetrag>0?(cashflowVorAmort/ekBetrag)*100:0;
+
+    return{
+      kp,gi,sanTotal,jsm,ertrag,
+      nkJ,vwJ,uhJ,lvJ,lpct,totK,noi,
+      h1Betrag,h2Betrag,ekBetrag,ekPct,
+      h1ZinsJ,h2ZinsJ,h2AmortJ,h2Jahre,totalZinsJ,
+      cashflowVorAmort,cashflowNachAmort,
+      brutto,netto,cfRend,ekRend,ekRendOhneAmort,af,zf
+    };
+  },[form,report,sanTotal,manualMode]);
+
+  // ── MIX TOTALS (live) ────────────────────────────────────────────────────
+  const mixTotalMt=useMemo(()=>form.mix.filter(m=>m.on&&m.anzahl&&m.m2).reduce((s,m)=>{
+    if(manualMode) return s+(parseFloat(m.manMiete)||0)*(parseFloat(m.anzahl)||0);
+    const d=report?.miete[m.zi]; if(!d)return s;
+    return s+(d[m.seg]||d.p50)*parseFloat(m.m2)/12*(parseFloat(m.anzahl)||0);
+  },0),[form.mix,report,manualMode]);
+
+  const mixTotalJ=mixTotalMt*12;
+
+  // ─────────────────────────────────────────────────────────────────────────
+  return(
+    <div className="app">
+      {/* HEADER */}
+      <div className="header">
+        <div>
+          <h1>Immo<span>Analyse</span></h1>
+          <p>Ertragsrechnung & Bewertung · Schweiz · Wüest Partner</p>
+        </div>
+        <div className={manualMode?"wp-chip":"wp-chip"} style={manualMode?{background:"rgba(217,92,92,0.1)",border:"1px solid rgba(217,92,92,0.3)",color:"var(--red)"}:{}}>
+          {manualMode?"✏️ Manueller Modus — keine WP-Daten":"📊 "+report?.name+" · "+report?.quartal}
+        </div>
+      </div>
+
+      {/* TABS */}
+      <div className="tabs">
+        {TABS.map((t,i)=>(
+          <div key={i} className={`tab ${tab===i?"on":""}`} onClick={()=>setTab(i)}>
+            <span className="tn">{i<tab?"✓":i+1}</span>{t.i} {t.l}
+          </div>
+        ))}
+      </div>
+
+      <div className="main">
+
+        {/* ═══ TAB 0: IMPORT ═══ */}
+        {tab===0&&(
+          <div>
+            {/* MODE TOGGLE */}
+            <div className="mode-toggle">
+              <button className={`mode-btn ${!manualMode?"on wp":""}`} onClick={()=>setManualMode(false)}>
+                📊 Mit Wüest Partner Report
+              </button>
+              <button className={`mode-btn ${manualMode?"on manual":""}`} onClick={()=>setManualMode(true)}>
+                ✏️ Manuelle Eingabe (ohne WP)
+              </button>
+            </div>
+
+            {manualMode?(
+              /* ── MANUELLER MODUS ── */
+              <div>
+                <div className="manual-alert">
+                  <span>⚠️</span>
+                  <div><strong>Kein Wüest Partner Report aktiv.</strong> Kaufpreise, Marktsegmente und Mietpreise basieren auf manuellen Eingaben — keine Marktdatenvalidierung. Felder ohne WP-Referenz sind rot markiert.</div>
+                </div>
+                <div className="card">
+                  <div className="ct">Manuelle Marktparameter</div>
+                  <p className="cs">Ersatzwerte für fehlende WP-Marktdaten — bitte sorgfältig recherchieren</p>
+                  <div className="g3">
+                    <div className="f">
+                      <label>Kapitalisierungssatz % <span style={{color:"var(--red)"}}>★</span></label>
+                      <input type="number" step="0.1" value={form.manKapSatz} onChange={e=>sf("manKapSatz",e.target.value)} className="no-data"/>
+                      <span className="hint">Für MFH-Ertragswert · Markt CH: 3.5–5.5%</span>
+                    </div>
+                    <div className="f">
+                      <label>Bodenpreis CHF/m² <span style={{color:"var(--red)"}}>★</span></label>
+                      <input type="number" value={form.manBodenPreis} onChange={e=>sf("manBodenPreis",e.target.value)} className="no-data"/>
+                      <span className="hint">Für EFH-Kaufpreiskalkulation</span>
+                    </div>
+                    <div className="f">
+                      <label>Leerstandsquote % <span style={{color:"var(--red)"}}>★</span></label>
+                      <input type="number" step="0.1" value={form.manLeerstand} onChange={e=>sf("manLeerstand",e.target.value)} className="no-data"/>
+                      <span className="hint">Referenzwert falls kein WP-Wert</span>
+                    </div>
+                  </div>
+                  <div className="ib" style={{marginTop:"0.75rem"}}>
+                    <b>Hinweis:</b> Im manuellen Modus wird der Kaufpreis direkt im Objekt-Tab eingetragen. Die Mieten im Wohnungsmix werden als CHF/Mt. pro Einheit eingegeben (keine Segmentauswahl). Alle manuellen Felder sind rot markiert.
+                  </div>
+                </div>
+              </div>
+            ):(
+              /* ── WP MODUS ── */
+              <div>
+                <div className="card">
+                  <div className="ct">Wüest Partner Report importieren</div>
+                  <p className="cs">JSON-Export hochladen · oder Demo-Report Suhr AG verwenden</p>
+                  <div className={`dz ${drag?"drag":""}`}
+                    onDragOver={e=>{e.preventDefault();setDrag(true);}}
+                    onDragLeave={()=>setDrag(false)}
+                    onDrop={e=>{e.preventDefault();setDrag(false);handleFile(e.dataTransfer.files[0]);}}
+                    onClick={()=>fileRef.current?.click()}>
+                    <input ref={fileRef} type="file" accept=".json,.pdf" onChange={e=>handleFile(e.target.files[0])} />
+                    <div style={{fontSize:"2rem",marginBottom:"0.4rem"}}>📄</div>
+                    <strong style={{color:"var(--text)",fontSize:"0.88rem"}}>WP Report hier ablegen oder klicken</strong>
+                    <p>JSON-Datei (strukturierter WP-Export) · PDF als Platzhalter</p>
+                  </div>
+                  <div className="ib"><b>JSON-Struktur:</b> Felder <code>miete</code>, <code>etw</code>, <code>efh</code>, <code>boden</code>, <code>markt</code> — gleiche Struktur wie Demo-Report.</div>
+                  <div className="sec">Gespeicherte Reports</div>
+                  <div className="rl">
+                    {reports.map(r=>(
+                      <div key={r.id} className={`ri ${activeId===r.id?"on":""}`} onClick={()=>setActiveId(r.id)}>
+                        <div><div className="ri-n">{r.name}</div><div className="ri-m">{r.gemeinde}, {r.kanton} · {r.datum}</div></div>
+                        <div style={{display:"flex",alignItems:"center",gap:"0.5rem"}}>
+                          <span className="ri-b">{r.quartal}</span>
+                          {r.id!==DEMO.id&&<button className="db" onClick={e=>{e.stopPropagation();setReports(rs=>rs.filter(x=>x.id!==r.id));if(activeId===r.id)setActiveId(DEMO.id);}}>✕</button>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                {report&&(
+                  <div className="card">
+                    <div className="ct">Marktdaten · {report.name}</div>
+                    <div className="g3">
+                      {[
+                        ["Nettomiete Median (4.5 Zi)",chf((report.miete["4.5"]?.p50||0)*(report.miete["4.5"]?.m2||105)/12)+"/Mt."],
+                        ["ETW Kaufpreis Median",chf(report.etw.p50)+"/m²"],
+                        ["EFH Kaufpreis Median",chf(report.efh.p50)+"/m²"],
+                        ["Kapitalisierungssatz",pct(report.markt.kapSatz)],
+                        ["Leerstand MFH 2025",pct(report.markt.leerstandMFH)],
+                        ["Bev.-Wachstum 3J","+"+pct(report.markt.bevWachstum3J)],
+                      ].map(([l,v])=>(
+                        <div key={l} className="kpi"><div className="kl">{l}</div><div className="kv g">{v}</div></div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            <div className="nav"><div/><button className="nn" onClick={()=>setTab(1)}>Weiter: Objekt →</button></div>
+          </div>
+        )}
+
+        {/* ═══ TAB 1: OBJEKT ═══ */}
+        {tab===1&&(
+          <div>
+            {manualMode&&<div className="manual-alert"><span>⚠️</span><div>Manueller Modus aktiv — <strong>Kaufpreis muss manuell eingetragen werden</strong>. WP-basierte Segmentpreise sind nicht verfügbar.</div></div>}
+            <div className="card">
+              <div className="ct">Objekttyp</div>
+              <div className="tg">
+                {[["MFH","🏢","Mehrfamilienhaus"],["ETW","🏠","Eigentumswohnung"],["EFH","🏡","Einfamilienhaus"]].map(([k,i,l])=>(
+                  <div key={k} className={`tc ${form.typ===k?"on":""}`} onClick={()=>sf("typ",k)}>
+                    <div className="tc-i">{i}</div><div className="tc-l">{l}</div>
+                  </div>
+                ))}
+              </div>
+              <div className="g3">
+                <div className="f"><label>Baujahr</label><input type="number" value={form.baujahr} onChange={e=>sf("baujahr",e.target.value)} placeholder="z.B. 1960"/></div>
+                <div className="f"><label>Objektzustand</label>
+                  <select value={form.zustand} onChange={e=>sf("zustand",e.target.value)}>
+                    {ZUSTAND_OPT.map(z=><option key={z}>{z}</option>)}
+                  </select>
+                </div>
+                <div className="f"><label>Grundstück m²</label><input type="number" value={form.grundstueck} onChange={e=>sf("grundstueck",e.target.value)} placeholder="z.B. 800"/></div>
+              </div>
+            </div>
+
+            {(form.typ==="ETW"||form.typ==="EFH")&&(
+              <div className="card">
+                <div className="ct">{form.typ==="ETW"?"Eigentumswohnung":"Einfamilienhaus"} — Details</div>
+                <div className="g3" style={{marginBottom:"1rem"}}>
+                  <div className="f"><label>Wohnfläche m²</label><input type="number" value={form.wfEFH} onChange={e=>sf("wfEFH",e.target.value)} placeholder="z.B. 140"/></div>
+                  {form.typ==="EFH"&&<div className="f"><label>Zimmeranzahl</label><input type="number" step="0.5" value={form.zimEFH} onChange={e=>sf("zimEFH",e.target.value)}/></div>}
+                  <div className="f"><label>Kaufpreis CHF (opt.)</label><input type="number" value={form.kaufpreis} onChange={e=>sf("kaufpreis",e.target.value)} placeholder="Autom. berechnet"/></div>
+                </div>
+                <div className="f"><label>Marktsegment{manualMode&&<span className="no-data-badge">⚠ keine WP-Daten</span>}</label>
+                  {manualMode?(
+                    <div style={{background:"rgba(217,92,92,0.08)",border:"1px solid rgba(217,92,92,0.3)",borderRadius:8,padding:"0.65rem 0.9rem",fontSize:"0.8rem",color:"var(--red)"}}>
+                      Im manuellen Modus nicht verfügbar — Kaufpreis oben direkt eintragen.
+                    </div>
+                  ):(
+                  <div className="sp" style={{marginTop:"0.4rem"}}>
+                    {SEGS.map(k=>{
+                      const p=form.typ==="EFH"?report?.efh[k]:report?.etw[k];
+                      return<button key={k} className={`pill ${form.segEFH===k?"on":""}`} onClick={()=>sf("segEFH",k)}>
+                        {SLBL[k]}{p?` · ${chf(p)}/m²`:""}
+                      </button>;
+                    })}
+                  </div>
+                  )}
+                </div>
+                {R&&kpCalc(R)&&<div className="ib" style={{marginTop:"0.75rem"}}><b>Kalkulierter Kaufpreis:</b> {chf(R.kp)} · Altersfaktor {Math.round(R.af*100)}% · Zustand {Math.round(R.zf*100)}%</div>}
+              </div>
+            )}
+
+            {form.typ==="MFH"&&(
+              <div className="card">
+                <div className="ct">MFH — Kaufpreis</div>
+                <div className="g2">
+                  <div className="f"><label>Kaufpreis CHF (opt.)</label>
+                    <input type="number" value={form.kaufpreis} onChange={e=>sf("kaufpreis",e.target.value)} placeholder="Autom. aus Ertragswert"/>
+                    <span className="hint">Leer → Sollmiete ÷ Kap.-Satz ({report?.markt.kapSatz}%) × Altersfaktor</span>
+                  </div>
+                  {R&&<div className="kpi"><div className="kl">Kalkulierter Kaufpreis</div><div className="kv g">{chf(R.kp)}</div><div className="ks">Altersfaktor {Math.round((R.af||1)*100)}%</div></div>}
+                </div>
+              </div>
+            )}
+
+            {/* SANIERUNG KARTE */}
+            <div className="card">
+              <div className="ct">Einmalsanierung</div>
+              <p className="cs">Einmalige Investition — fliesst in Gesamtinvestition & Hypothek ein</p>
+
+              {/* Zusammenfassungszeile + Toggle */}
+              <div className={`san-bar ${sanOpen?"open":""}`} onClick={()=>setSanOpen(o=>!o)}>
+                <div className="san-bar-left">
+                  <span style={{fontSize:"1rem"}}>🔧</span>
+                  <span className="san-bar-title">Sanierungspositionen</span>
+                  <span style={{fontSize:"0.72rem",color:"var(--muted)"}}>({sanPos.length} Position{sanPos.length!==1?"en":""})</span>
+                </div>
+                <div style={{display:"flex",alignItems:"center",gap:"1rem"}}>
+                  <span className="san-bar-total">{sanTotal>0?chf(sanTotal):"Kalkulation öffnen"}</span>
+                  <span className="san-bar-arrow">▼</span>
+                </div>
+              </div>
+
+              {sanOpen&&(
+                <div className="san-body">
+                  <table className="san-table">
+                    <thead>
+                      <tr>
+                        <th style={{width:"36%"}}>Beschrieb</th>
+                        <th style={{width:"22%",textAlign:"right"}}>Einheitspreis CHF</th>
+                        <th style={{width:"16%",textAlign:"right"}}>Anzahl / Einh.</th>
+                        <th style={{width:"20%",textAlign:"right"}}>Kosten CHF</th>
+                        <th style={{width:"6%"}}></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sanPos.map(p=>{
+                        const ep=parseFloat(p.einheit)||0;
+                        const anz=parseFloat(p.anzahl)||0;
+                        const zeileTotal=ep&&anz?ep*anz:parseFloat(p.kosten)||0;
+                        return(
+                          <tr key={p.id}>
+                            <td><input value={p.beschrieb} onChange={e=>setSan(p.id,"beschrieb",e.target.value)} placeholder="z.B. Fassadensanierung"/></td>
+                            <td><input type="number" value={p.einheit} onChange={e=>setSan(p.id,"einheit",e.target.value)} placeholder="0" style={{textAlign:"right"}}/></td>
+                            <td><input type="number" value={p.anzahl} onChange={e=>setSan(p.id,"anzahl",e.target.value)} placeholder="1" style={{textAlign:"right"}}/></td>
+                            <td style={{textAlign:"right",fontWeight:600,color:"var(--gold)"}}>
+                              {zeileTotal>0?zeileTotal.toLocaleString("de-CH"):"—"}
+                            </td>
+                            <td><button className="san-del-btn" onClick={()=>delSanPos(p.id)}>✕</button></td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                  <button className="san-add-btn" onClick={addSanPos}>+ Position hinzufügen</button>
+                  <div className="san-total-row">
+                    <span className="san-total-label">Total Einmalsanierung</span>
+                    <span className="san-total-val">{sanTotal>0?chf(sanTotal):"—"}</span>
+                  </div>
+                  {sanTotal>0&&R&&R.kp>0&&(
+                    <div className="ib" style={{marginTop:"0.65rem"}}>
+                      <b>Gesamtinvestition:</b> {chf(R.kp)} Kaufpreis + {chf(sanTotal)} Sanierung = <b>{chf(R.gi)}</b> · Renditeberechnung auf Gesamtinvestition.
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="nav">
+              <button className="nb" onClick={()=>setTab(0)}>← Zurück</button>
+              <button className="nn" onClick={()=>setTab(2)}>Weiter: Wohnungsmix →</button>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ TAB 2: MIX ═══ */}
+        {tab===2&&(
+          <div>
+            <div className="card">
+              <div className="ct">Wohnungsmix</div>
+              <p className="cs">Situation nach Umbau / Anbau / Neubau — Zimmertypen aktivieren · Anzahl, Fläche & Marktsegment pro Typ</p>
+              {manualMode&&<div className="manual-alert"><span>⚠️</span><div>Manueller Modus — Miete als <strong>CHF/Mt. pro Einheit</strong> eingeben. WP-Marktsegmente nicht verfügbar.</div></div>}
+              <table className="mt">
+                <thead>
+                  <tr>
+                    <th style={{width:32}}></th>
+                    <th>Typ</th>
+                    <th>Anzahl</th>
+                    <th>m²/Einheit</th>
+                    {manualMode
+                      ?<th style={{color:"var(--red)"}}>⚠ Miete CHF/Mt./Einheit</th>
+                      :<th>Marktsegment</th>}
+                    <th style={{textAlign:"right"}}>Nettomiete/Mt.</th>
+                    <th style={{textAlign:"right"}}>Jahressollmiete</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {form.mix.map((m,idx)=>{
+                    const d=report?.miete[m.zi];
+                    const mQm=d?d[m.seg]||d.p50:0;
+                    const qm=parseFloat(m.m2)||(d?.m2||0);
+                    const anz=parseFloat(m.anzahl)||0;
+                    const mt=manualMode
+                      ?(parseFloat(m.manMiete)||0)*anz
+                      :mQm*qm/12*anz;
+                    const j=mt*12;
+                    return(
+                      <tr key={m.zi} style={{opacity:m.on?1:0.4,transition:"opacity .2s"}}>
+                        <td>
+                          <label className="tog">
+                            <input type="checkbox" checked={m.on} onChange={()=>setMix(idx,"on",!m.on)}/>
+                            <span className="ts"/>
+                          </label>
+                        </td>
+                        <td><div style={{fontSize:"0.84rem",fontWeight:500}}>{m.zi}-Zi</div><div style={{fontSize:"0.65rem",color:"var(--muted)"}}>Ref. {d?.m2||"—"}m²</div></td>
+                        <td><input type="number" min="0" value={m.anzahl} disabled={!m.on} placeholder="0" onChange={e=>setMix(idx,"anzahl",e.target.value)}/></td>
+                        <td><input type="number" min="0" value={m.m2} disabled={!m.on} placeholder={d?.m2||"—"} onChange={e=>setMix(idx,"m2",e.target.value)}/></td>
+                        <td>
+                          {manualMode?(
+                            <input type="number" min="0" value={m.manMiete} disabled={!m.on}
+                              placeholder="z.B. 1800"
+                              className="no-data"
+                              style={{borderColor:"rgba(217,92,92,0.5)"}}
+                              onChange={e=>setMix(idx,"manMiete",e.target.value)}/>
+                          ):(
+                            <div>
+                              <div className="sp">
+                                {SEGS.filter(k=>d?.[k]).map(k=>(
+                                  <button key={k} className={`pill sm ${m.seg===k?"on":""}`}
+                                    onClick={()=>m.on&&setMix(idx,"seg",k)}
+                                    style={{cursor:m.on?"pointer":"default"}}>
+                                    {SLBL[k]}
+                                  </button>
+                                ))}
+                              </div>
+                              {d&&<div style={{fontSize:"0.65rem",color:"var(--muted)",marginTop:"0.15rem"}}>{chf(mQm*(d?.m2||qm)/12)}/Mt. (Ref.)</div>}
+                            </div>
+                          )}
+                        </td>
+                        <td style={{textAlign:"right",fontSize:"0.83rem"}}>
+                          {m.on&&anz>0&&(qm>0||manualMode)?<span style={{color:manualMode?"var(--red)":"var(--gold)"}}>{chf(mt)}</span>:<span style={{color:"var(--muted)"}}>—</span>}
+                        </td>
+                        <td style={{textAlign:"right",fontSize:"0.83rem"}}>
+                          {m.on&&anz>0&&(qm>0||manualMode)?chf(j):<span style={{color:"var(--muted)"}}>—</span>}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+                <tfoot>
+                  <tr>
+                    <td colSpan={5}/>
+                    <td style={{textAlign:"right",fontWeight:600,color:"var(--gold)",fontSize:"0.85rem",borderTop:"1px solid var(--border)",paddingTop:"0.5rem"}}>{chf(mixTotalMt)}</td>
+                    <td style={{textAlign:"right",fontWeight:600,color:"var(--gold)",fontSize:"0.85rem",borderTop:"1px solid var(--border)",paddingTop:"0.5rem"}}>{chf(mixTotalJ)}</td>
+                  </tr>
+                </tfoot>
+              </table>
+              <div className="ib">{manualMode?<span><b style={{color:"var(--red)"}}>⚠ Manueller Modus:</b> Mieten ohne WP-Marktdatenvalidierung. Bitte eigene Marktrecherche durchführen.</span>:<span><b>Gilt für alle Objekttypen (EFH, ETW, MFH):</b> Der Wohnungsmix bildet die Vermietungssituation <b>nach</b> Umbau, Anbau oder Neubau ab. Nettomietpreise gem. WP {report?.name} · {report?.quartal}.</span>}</div>
+            </div>
+            <div className="nav">
+              <button className="nb" onClick={()=>setTab(1)}>← Zurück</button>
+              <button className="nn" onClick={()=>setTab(3)}>Weiter: Kosten →</button>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ TAB 3: KOSTEN ═══ */}
+        {tab===3&&(
+          <div>
+            {/* Nebenkosten */}
+            <div className="card">
+              <div className="ct">Nebenkosten / Betrieb</div>
+              <p className="cs">Gebäudeversicherung, nicht überwälzbare Betriebskosten, allg. Reparaturen</p>
+              <div className="g2">
+                <div>
+                  <div className="btg" style={{marginBottom:"0.75rem"}}>
+                    <button className={`bt ${form.nkMode==="pct"?"on":""}`} onClick={()=>sf("nkMode","pct")}>% vom Kaufpreis/Jahr</button>
+                    <button className={`bt ${form.nkMode==="chf"?"on":""}`} onClick={()=>sf("nkMode","chf")}>CHF/Monat</button>
+                  </div>
+                  {form.nkMode==="pct"
+                    ?<div className="f"><label>Nebenkostensatz % p.a.</label><input type="number" step="0.1" value={form.nkPct} onChange={e=>sf("nkPct",e.target.value)}/><span className="hint">Typisch 1.0–2.0%</span></div>
+                    :<div className="f"><label>Nebenkosten CHF/Monat</label><input type="number" value={form.nkCHF} onChange={e=>sf("nkCHF",e.target.value)}/></div>}
+                </div>
+                <div className="kpi"><div className="kl">Nebenkosten p.a.</div><div className="kv g">{R?chf(R.nkJ):"—"}</div><div className="ks">Reaktiv aktualisiert</div></div>
+              </div>
+            </div>
+
+            {/* Verwaltung */}
+            <div className="card">
+              <div className="ct">Verwaltung & Unterhalt</div>
+              <div className="g2">
+                <div>
+                  <div className="sec">Verwaltungskosten</div>
+                  <div className="btg" style={{marginBottom:"0.75rem"}}>
+                    <button className={`bt ${form.vwMode==="pct"?"on":""}`} onClick={()=>sf("vwMode","pct")}>% der Sollmiete</button>
+                    <button className={`bt ${form.vwMode==="chf"?"on":""}`} onClick={()=>sf("vwMode","chf")}>CHF/Monat</button>
+                  </div>
+                  {form.vwMode==="pct"
+                    ?<div className="f"><label>Verwaltung % der Sollmiete</label><input type="number" step="0.5" value={form.vwPct} onChange={e=>sf("vwPct",e.target.value)}/><span className="hint">Typisch 2–5%</span></div>
+                    :<div className="f"><label>Verwaltung CHF/Monat</label><input type="number" value={form.vwCHF} onChange={e=>sf("vwCHF",e.target.value)}/></div>}
+                </div>
+                <div>
+                  <div className="sec">Unterhalt / Rückstellung</div>
+                  <div className="btg" style={{marginBottom:"0.75rem"}}>
+                    <button className={`bt ${form.uhMode==="pct"?"on":""}`} onClick={()=>sf("uhMode","pct")}>% vom Kaufpreis/Jahr</button>
+                    <button className={`bt ${form.uhMode==="chf"?"on":""}`} onClick={()=>sf("uhMode","chf")}>CHF/Monat</button>
+                  </div>
+                  {form.uhMode==="pct"
+                    ?<div className="f"><label>Unterhalt % p.a.</label><input type="number" step="0.1" value={form.uhPct} onChange={e=>sf("uhPct",e.target.value)}/><span className="hint">Typisch 0.5–1.5%</span></div>
+                    :<div className="f"><label>Unterhalt CHF/Monat</label><input type="number" value={form.uhCHF} onChange={e=>sf("uhCHF",e.target.value)}/></div>}
+                </div>
+              </div>
+              {R&&<div style={{marginTop:"1rem"}} className="g2">
+                <div className="kpi"><div className="kl">Verwaltung p.a.</div><div className="kv g">{chf(R.vwJ)}</div></div>
+                <div className="kpi"><div className="kl">Unterhalt p.a.</div><div className="kv g">{chf(R.uhJ)}</div></div>
+              </div>}
+            </div>
+
+            {/* Leerstand + Finanzierung */}
+            <div className="card">
+              <div className="ct">Leerstand & Finanzierung</div>
+
+              {/* Leerstand */}
+              <div className="f" style={{marginBottom:"1.25rem"}}>
+                <label>Leerstandsquote % (leer = Referenzwert)</label>
+                <input type="number" step="0.1" value={form.leerPct} onChange={e=>sf("leerPct",e.target.value)}
+                  placeholder={manualMode?`Manuell: ${form.manLeerstand}%`:`WP: ${form.typ==="EFH"?report?.markt.leerstandEFH:report?.markt.leerstandMFH}%`}
+                  style={{maxWidth:200}}/>
+                <span className="hint">{manualMode?`Referenz aus Tab 1: ${form.manLeerstand}% (manuell)`:`WP Suhr: MFH ${report?.markt.leerstandMFH}% · EFH ${report?.markt.leerstandEFH}%`}</span>
+              </div>
+
+              <div className="sec">Hypothekarstruktur</div>
+
+              {/* 1. Hypothek */}
+              <div style={{background:"var(--bg)",border:"1px solid var(--border)",borderRadius:10,padding:"1rem",marginBottom:"0.85rem"}}>
+                <div style={{fontSize:"0.72rem",fontWeight:600,color:"var(--gold)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:"0.75rem"}}>
+                  1. Hypothek — keine Amortisation
+                </div>
+                <div className="g3">
+                  <div className="f">
+                    <label>Anteil % der Gesamtinvestition</label>
+                    <input type="number" step="0.1" value={form.h1Pct} onChange={e=>sf("h1Pct",e.target.value)}/>
+                    <span className="hint">{R?chf(R.h1Betrag):""}</span>
+                  </div>
+                  <div className="f">
+                    <label>Zinssatz % p.a.</label>
+                    <input type="number" step="0.05" value={form.h1Zins} onChange={e=>sf("h1Zins",e.target.value)}/>
+                    <span className="hint">{R?chf(R.h1ZinsJ)+"/Jahr":""}</span>
+                  </div>
+                  <div className="kpi" style={{alignSelf:"flex-end"}}>
+                    <div className="kl">Jahreszins 1. Hypo</div>
+                    <div className="kv g">{R?chf(R.h1ZinsJ):"—"}</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Hypothek */}
+              <div style={{background:"var(--bg)",border:"1px solid var(--border)",borderRadius:10,padding:"1rem",marginBottom:"0.85rem"}}>
+                <div style={{fontSize:"0.72rem",fontWeight:600,color:"var(--blue,#4A8FD4)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:"0.75rem"}}>
+                  2. Hypothek — mit Amortisation
+                </div>
+                <div className="g3">
+                  <div className="f">
+                    <label>Anteil % der Gesamtinvestition</label>
+                    <input type="number" step="0.1" value={form.h2Pct} onChange={e=>sf("h2Pct",e.target.value)}/>
+                    <span className="hint">{R?chf(R.h2Betrag):""}</span>
+                  </div>
+                  <div className="f">
+                    <label>Zinssatz % p.a.</label>
+                    <input type="number" step="0.05" value={form.h2Zins} onChange={e=>sf("h2Zins",e.target.value)}/>
+                    <span className="hint">{R?chf(R.h2ZinsJ)+"/Jahr":""}</span>
+                  </div>
+                  <div className="f">
+                    <label>Amortisationsdauer (Jahre)</label>
+                    <input type="number" step="1" value={form.h2Jahre} onChange={e=>sf("h2Jahre",e.target.value)}/>
+                    <span className="hint">{R?chf(R.h2AmortJ)+"/Jahr linear":""}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* EK + Zusammenfassung */}
+              {R&&(
+                <div style={{background:"var(--faint)",borderRadius:9,padding:"1rem"}}>
+                  <div style={{fontSize:"0.7rem",color:"var(--muted)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:"0.65rem"}}>Struktur-Übersicht</div>
+                  <div className="g4" style={{gap:"0.65rem"}}>
+                    <div className="kpi"><div className="kl">1. Hypothek ({form.h1Pct}%)</div><div className="kv g">{chf(R.h1Betrag)}</div><div className="ks">{form.h1Zins}% = {chf(R.h1ZinsJ)}/J.</div></div>
+                    <div className="kpi"><div className="kl">2. Hypothek ({form.h2Pct}%)</div><div className="kv" style={{color:"var(--blue,#4A8FD4)"}}>{chf(R.h2Betrag)}</div><div className="ks">{form.h2Zins}% + Amort. {chf(R.h2AmortJ)}/J.</div></div>
+                    <div className="kpi"><div className="kl">Eigenkapital ({(R.ekPct*100).toFixed(1)}%)</div><div className="kv gr">{chf(R.ekBetrag)}</div></div>
+                    <div className="kpi"><div className="kl">Total Zinslast p.a.</div><div className="kv" style={{color:"var(--red)"}}>{chf(R.totalZinsJ)}</div><div className="ks">{chf(R.totalZinsJ/12)}/Mt.</div></div>
+                  </div>
+                </div>
+              )}
+              {R&&<div style={{marginTop:"1rem"}} className="g3">
+                <div className="kpi"><div className="kl">Leerstandsverlust p.a.</div><div className="kv" style={{color:"var(--red)"}}>{chf(R.lvJ)}</div><div className="ks">{pct(R.lpct)} der Sollmiete</div></div>
+                <div className="kpi"><div className="kl">NOI (vor Finanzierung)</div><div className="kv gr">{chf(R.noi)}</div></div>
+                <div className="kpi"><div className="kl">Cashflow nach Zinsen</div><div className={`kv ${R.cashflowVorAmort>=0?"gr":"re"}`}>{chf(R.cashflowVorAmort)}</div><div className="ks">vor Amortisation</div></div>
+              </div>}
+            </div>
+
+            <div className="nav">
+              <button className="nb" onClick={()=>setTab(2)}>← Zurück</button>
+              <button className="nn" onClick={()=>setTab(4)}>Ergebnis ansehen →</button>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ TAB 4: ERGEBNIS ═══ */}
+        {tab===4&&(
+          <div>
+            {!R||!R.kp?(
+              <div style={{textAlign:"center",padding:"3rem",color:"var(--muted)"}}>
+                <div style={{fontSize:"2.5rem",marginBottom:"0.75rem"}}>📊</div>
+                <p>Bitte Objekt & Wohnungsmix befüllen.</p>
+                <button className="nn" style={{maxWidth:220,margin:"1rem auto 0",display:"block"}} onClick={()=>setTab(1)}>← Zu Objekt</button>
+              </div>
+            ):(
+              <>
+                {/* LIVE INDICATOR */}
+                <div style={{fontSize:"0.72rem",color:"var(--muted)",marginBottom:"1rem",display:"flex",alignItems:"center"}}>
+                  <span className="live-dot"/>
+                  Ergebnis wird live bei jeder Änderung aktualisiert — kein Berechnen-Button nötig
+                </div>
+
+                {/* HERO */}
+                <div className="hero">
+                  <div className="hero-top">
+                    <div>
+                      <div className="hl">Jahressollmiete (Brutto)</div>
+                      <div className="hv">{chf(R.jsm)}</div>
+                      <div className="hs">NOI nach Kosten: <strong style={{color:"var(--text)"}}>{chf(R.noi)}</strong> · {chf(R.noi/12)}/Mt.</div>
+                    </div>
+                    <div style={{textAlign:"right"}}>
+                      <div className="hl">Marktwert / Gesamtinvestition</div>
+                      <div className="hv" style={{fontSize:"2rem"}}>{chf(R.gi||R.kp)}</div>
+                      <div className="hs">{R.sanTotal>0?`${chf(R.kp)} + ${chf(R.sanTotal)} San.`:""} Alter {Math.round(R.af*100)}% · Zustand {Math.round(R.zf*100)}%</div>
+                    </div>
+                  </div>
+                  <div className="kpis">
+                    <div className="kpi"><div className="kl">Bruttomietrendite</div><div className={`kv ${R.brutto>=4?"gr":"g"}`}>{pct(R.brutto)}</div><div className="ks">Sollmiete / Gesamtinvestition</div></div>
+                    <div className="kpi"><div className="kl">Nettomietrendite</div><div className={`kv ${R.netto>=3?"gr":"g"}`}>{pct(R.netto)}</div><div className="ks">NOI / Gesamtinvestition</div></div>
+                    <div className="kpi"><div className="kl">EK-Rendite (Liquidität)</div><div className={`kv ${R.ekRend>=5?"gr":R.ekRend>=0?"g":"re"}`}>{pct(R.ekRend)}</div><div className="ks">Cashflow nach Tilgung ÷ EK</div></div>
+                    <div className="kpi"><div className="kl">EK-Rendite (Gesamtrendite)</div><div className={`kv ${R.ekRendOhneAmort>=5?"gr":R.ekRendOhneAmort>=0?"g":"re"}`}>{pct(R.ekRendOhneAmort)}</div><div className="ks">inkl. Vermögensaufbau Tilgung</div></div>
+                  </div>
+                </div>
+
+                <div className="split">
+                  {/* LEFT: ERTRAGSRECHNUNG + FINANZIERUNG */}
+                  <div>
+                    <div className="card">
+                      <div className="ct">Ertragsrechnung</div>
+                      {(()=>{
+                        const mixQmTotal=R.ertrag.reduce((s,d)=>s+d.qm*d.anz,0);
+                        const objQm=parseFloat(form.wfEFH)||0;
+                        const diff=mixQmTotal-(objQm);
+                        return mixQmTotal>0&&(
+                          <div className="ib" style={{marginBottom:"0.85rem"}}>
+                            <b>Mietertrag aus Wohnungsmix</b> · Total {mixQmTotal.toLocaleString("de-CH")} m²
+                            {objQm>0&&diff!==0&&(
+                              <span style={{color:diff>0?"var(--green)":"var(--gold)"}}>
+                                {" "}({diff>0?"+":""}{diff.toFixed(0)} m² vs. Ausgangsfläche {objQm} m²)
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
+                      <table className="dt">
+                        <thead><tr><th>Position</th><th>CHF/Mt.</th><th>CHF/Jahr</th></tr></thead>
+                        <tbody>
+                          <tr className="sect"><td colSpan={3}>Ertrag</td></tr>
+                          {R.ertrag.map((d,i)=>(
+                            <tr key={i}>
+                              <td>{d.zi}{d.anz>1?` · ${d.anz}× ${d.qm}m²`:` · ${d.qm}m²`} · {SLBL[d.seg]}</td>
+                              <td className="gd">{chf(d.mMt)}</td>
+                              <td className="gd">{chf(d.jm)}</td>
+                            </tr>
+                          ))}
+                          <tr className="tot"><td>Brutto-Sollmiete</td><td className="gd">{chf(R.jsm/12)}</td><td className="gd">{chf(R.jsm)}</td></tr>
+                          <tr className="sect"><td colSpan={3}>Aufwand</td></tr>
+                          <tr><td>Nebenkosten / Betrieb</td><td className="neg">-{chf(R.nkJ/12)}</td><td className="neg">-{chf(R.nkJ)}</td></tr>
+                          <tr><td>Verwaltungskosten</td><td className="neg">-{chf(R.vwJ/12)}</td><td className="neg">-{chf(R.vwJ)}</td></tr>
+                          <tr><td>Unterhalt / Rückstellung</td><td className="neg">-{chf(R.uhJ/12)}</td><td className="neg">-{chf(R.uhJ)}</td></tr>
+                          <tr><td>Leerstandsverlust ({pct(R.lpct,1)})</td><td className="neg">-{chf(R.lvJ/12)}</td><td className="neg">-{chf(R.lvJ)}</td></tr>
+                          <tr className="tot"><td>Total Aufwand</td><td className="neg">-{chf(R.totK/12)}</td><td className="neg">-{chf(R.totK)}</td></tr>
+                          <tr><td colSpan={3} style={{height:"0.4rem"}}/></tr>
+                          <tr className="tot"><td><strong>Nettomietertrag (NOI)</strong></td><td className="pos">{chf(R.noi/12)}</td><td className="pos">{chf(R.noi)}</td></tr>
+                          <tr className="sect"><td colSpan={3}>Finanzierungsaufwand</td></tr>
+                          <tr><td>Zins 1. Hypothek ({form.h1Pct}%, {form.h1Zins}%)</td><td className="neg">-{chf(R.h1ZinsJ/12)}</td><td className="neg">-{chf(R.h1ZinsJ)}</td></tr>
+                          <tr><td>Zins 2. Hypothek ({form.h2Pct}%, {form.h2Zins}%)</td><td className="neg">-{chf(R.h2ZinsJ/12)}</td><td className="neg">-{chf(R.h2ZinsJ)}</td></tr>
+                          <tr className="tot"><td>Total Zinslast</td><td className="neg">-{chf(R.totalZinsJ/12)}</td><td className="neg">-{chf(R.totalZinsJ)}</td></tr>
+                          <tr><td colSpan={3} style={{height:"0.3rem"}}/></tr>
+                          <tr className="tot"><td><strong>Cashflow vor Amortisation</strong></td>
+                            <td className={R.cashflowVorAmort>=0?"pos":"neg"}>{R.cashflowVorAmort>=0?"+":""}{chf(R.cashflowVorAmort/12)}</td>
+                            <td className={R.cashflowVorAmort>=0?"pos":"neg"}>{R.cashflowVorAmort>=0?"+":""}{chf(R.cashflowVorAmort)}</td>
+                          </tr>
+                          <tr><td>Amortisation 2. Hypothek (linear, {R.h2Jahre} J.)</td><td className="neg">-{chf(R.h2AmortJ/12)}</td><td className="neg">-{chf(R.h2AmortJ)}</td></tr>
+                          <tr><td colSpan={3} style={{height:"0.3rem"}}/></tr>
+                          <tr className="tot"><td><strong>Cashflow nach Amortisation</strong></td>
+                            <td className={R.cashflowNachAmort>=0?"pos":"neg"}>{R.cashflowNachAmort>=0?"+":""}{chf(R.cashflowNachAmort/12)}</td>
+                            <td className={R.cashflowNachAmort>=0?"pos":"neg"}>{R.cashflowNachAmort>=0?"+":""}{chf(R.cashflowNachAmort)}</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+
+                    <div className="card">
+                      <div className="ct">Finanzierungsstruktur</div>
+                      <table className="dt">
+                        <tbody>
+                          <tr><td>Kaufpreis</td><td colSpan={2}>{chf(R.kp)}</td></tr>
+                          {R.sanTotal>0&&<tr><td>Einmalsanierung / Anbau</td><td colSpan={2} className="neg">{chf(R.sanTotal)}</td></tr>}
+                          <tr className="tot"><td>Gesamtinvestition</td><td colSpan={2} className="gd">{chf(R.gi)}</td></tr>
+                          <tr><td colSpan={3} style={{height:"0.3rem"}}/></tr>
+                          <tr><td>1. Hypothek ({form.h1Pct}%)</td><td colSpan={2}>{chf(R.h1Betrag)}</td></tr>
+                          <tr><td>2. Hypothek ({form.h2Pct}%)</td><td colSpan={2}>{chf(R.h2Betrag)}</td></tr>
+                          <tr><td>Eigenkapital ({(R.ekPct*100).toFixed(1)}%)</td><td colSpan={2} className="pos">{chf(R.ekBetrag)}</td></tr>
+                          <tr><td colSpan={3} style={{height:"0.3rem"}}/></tr>
+                          <tr><td>Zins 1. Hypo ({form.h1Zins}%)</td><td className="neg">-{chf(R.h1ZinsJ/12)}/Mt.</td><td className="neg">-{chf(R.h1ZinsJ)}/J.</td></tr>
+                          <tr><td>Zins 2. Hypo ({form.h2Zins}%)</td><td className="neg">-{chf(R.h2ZinsJ/12)}/Mt.</td><td className="neg">-{chf(R.h2ZinsJ)}/J.</td></tr>
+                          <tr><td>Amortisation 2. Hypo ({R.h2Jahre} J.)</td><td className="neg">-{chf(R.h2AmortJ/12)}/Mt.</td><td className="neg">-{chf(R.h2AmortJ)}/J.</td></tr>
+                        </tbody>
+                      </table>
+                      <div className="ib">
+                        <b>Stresstest (kalk. Zins 5%):</b> 1. Hypo {chf(R.h1Betrag*0.05/12)}/Mt. · 2. Hypo {chf(R.h2Betrag*0.05/12)}/Mt. · Total {chf((R.h1Betrag+R.h2Betrag)*0.05/12)}/Mt.
+                        — Tragbarkeit: Bruttolohn ≥ {chf((R.h1Betrag+R.h2Betrag)*0.05/12*3*12)}/Jahr
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* RIGHT: RENDITE + MARKT + PREISTABELLE */}
+                  <div>
+                    <div className="card">
+                      <div className="ct">Rendite-Übersicht</div>
+                      {[
+                        ["Bruttomietrendite",R.brutto,"Sollmiete ÷ Gesamtinvestition",R.brutto>=4],
+                        ["Nettomietrendite (NOI)",R.netto,"nach Kosten & Leerstand",R.netto>=3],
+                        ["Cashflow-Rendite (vor Amort.)",R.cfRend,"Cashflow vor Tilgung ÷ GI",R.cfRend>=0],
+                      ].map(([l,v,s,ok])=>(
+                        <div key={l} className="rr">
+                          <div><div className="rr-l">{l}</div><div className="rr-s">{s}</div></div>
+                          <div style={{display:"flex",alignItems:"center",gap:"0.5rem"}}>
+                            <span className="rr-v" style={{color:ok?"var(--green)":"var(--gold)"}}>{pct(v)}</span>
+                            <span className={`badge ${ok?"gr":"g"}`}>{ok?"✓":"~"}</span>
+                          </div>
+                        </div>
+                      ))}
+                      {/* EK-Rendite: zwei Varianten mit Erklärung */}
+                      <div style={{background:"var(--faint)",borderRadius:8,padding:"0.85rem",margin:"0.75rem 0 0"}}>
+                        <div style={{fontSize:"0.65rem",textTransform:"uppercase",letterSpacing:"0.08em",color:"var(--muted)",marginBottom:"0.6rem"}}>Eigenkapitalrendite — zwei Betrachtungsweisen</div>
+                        <div className="rr" style={{paddingTop:0}}>
+                          <div>
+                            <div className="rr-l">EK-Rendite (Liquidität)</div>
+                            <div className="rr-s">Cashflow <em>nach</em> Tilgung ÷ EK · zeigt freien Liquiditätsüberschuss</div>
+                          </div>
+                          <div style={{display:"flex",alignItems:"center",gap:"0.5rem"}}>
+                            <span className="rr-v" style={{color:R.ekRend>=5?"var(--green)":R.ekRend>=0?"var(--gold)":"var(--red)"}}>{pct(R.ekRend)}</span>
+                            <span className={`badge ${R.ekRend>=5?"gr":R.ekRend>=0?"g":"badge"}`}>{R.ekRend>=5?"✓":R.ekRend>=0?"~":"↓"}</span>
+                          </div>
+                        </div>
+                        <div className="rr" style={{borderBottom:"none",paddingBottom:0}}>
+                          <div>
+                            <div className="rr-l">EK-Rendite (Gesamtrendite)</div>
+                            <div className="rr-s">Cashflow <em>vor</em> Tilgung ÷ EK · Tilgung = Vermögensaufbau, kein Kostenfaktor</div>
+                          </div>
+                          <div style={{display:"flex",alignItems:"center",gap:"0.5rem"}}>
+                            <span className="rr-v" style={{color:R.ekRendOhneAmort>=5?"var(--green)":R.ekRendOhneAmort>=0?"var(--gold)":"var(--red)"}}>{pct(R.ekRendOhneAmort)}</span>
+                            <span className={`badge ${R.ekRendOhneAmort>=5?"gr":R.ekRendOhneAmort>=0?"g":"badge"}`}>{R.ekRendOhneAmort>=5?"✓":R.ekRendOhneAmort>=0?"~":"↓"}</span>
+                          </div>
+                        </div>
+                        <div style={{fontSize:"0.68rem",color:"var(--muted)",marginTop:"0.6rem",lineHeight:1.5,borderTop:"1px solid var(--border)",paddingTop:"0.5rem"}}>
+                          Die Differenz ({pct(R.ekRendOhneAmort-R.ekRend)}) entspricht der Tilgung von {chf(R.h2AmortJ)}/Jahr — dieser Betrag baut Fremdkapital ab und erhöht den Eigenkapitalanteil an der Liegenschaft.
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="card">
+                      <div className="ct">{manualMode?"Manuelle Parameter":"Marktkontext · "+report?.name}</div>
+                      {manualMode?(
+                        <>
+                          <div className="manual-alert" style={{marginBottom:"0.75rem"}}><span>⚠️</span><div>Kein WP-Report aktiv — Werte basieren auf manuellen Eingaben.</div></div>
+                          {[
+                            ["Kapitalisierungssatz (manuell)",pct(parseFloat(form.manKapSatz))],
+                            ["Bodenpreis (manuell)",chf(parseFloat(form.manBodenPreis))+"/m²"],
+                            ["Leerstandsreferenz (manuell)",pct(parseFloat(form.manLeerstand))],
+                          ].map(([l,v])=>(
+                            <div key={l} className="mr"><span className="ml" style={{color:"var(--red)"}}>{l}</span><span style={{color:"var(--red)"}}>{v}</span></div>
+                          ))}
+                        </>
+                      ):(
+                        <>
+                          {[
+                            ["Kapitalisierungssatz WP",pct(report?.markt.kapSatz)],
+                            ["Leerstand MFH 2025",pct(report?.markt.leerstandMFH)+" — sehr tief"],
+                            ["Leerstand EFH 2025",pct(report?.markt.leerstandEFH)],
+                            ["Angebotsrate Mietwohn.",pct(report?.markt.angebotMiete)],
+                            ["Bev.-Wachstum 3J","+"+pct(report?.markt.bevWachstum3J)],
+                            ["Steuer Paare 120k",pct(report?.markt.steuerlastPaare120k)+" (CH: 9.1%)"],
+                            ["WP-Rating EFH",(report?.markt.rating_efh||"—")+"/5"],
+                            ["WP-Rating MFH",(report?.markt.rating_mfh||"—")+"/5"],
+                          ].map(([l,v])=>(
+                            <div key={l} className="mr"><span className="ml">{l}</span><span>{v}</span></div>
+                          ))}
+                        </>
+                      )}
+                    </div>
+
+                    <div className="card">
+                      <div className="ct">Mietpreise nach Zimmertyp</div>
+                      {manualMode?(
+                        <div style={{fontSize:"0.82rem",color:"var(--muted)",padding:"0.5rem 0"}}>
+                          <div className="manual-alert"><span>⚠️</span><div>Manueller Modus — keine WP-Referenzmieten verfügbar. Mieten wurden direkt im Wohnungsmix eingetragen.</div></div>
+                          <table className="dt" style={{marginTop:"0.5rem"}}>
+                            <thead><tr><th>Typ</th><th>Anzahl</th><th style={{textAlign:"right"}}>Miete/Mt./Einh.</th><th style={{textAlign:"right"}}>Jahressollmiete</th></tr></thead>
+                            <tbody>
+                              {form.mix.filter(m=>m.on&&m.anzahl).map(m=>(
+                                <tr key={m.zi}>
+                                  <td>{m.zi}-Zi</td>
+                                  <td>{m.anzahl}</td>
+                                  <td style={{textAlign:"right",color:"var(--red)"}}>{chf(parseFloat(m.manMiete)||0)}</td>
+                                  <td style={{textAlign:"right"}}>{chf((parseFloat(m.manMiete)||0)*(parseFloat(m.anzahl)||0)*12)}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      ):(
+                        <table className="dt">
+                          <thead><tr><th>Typ</th><th>10%</th><th>50%</th><th>90%</th></tr></thead>
+                          <tbody>
+                            {ZI.map(zi=>{
+                              const d=report?.miete[zi]; if(!d)return null;
+                              return<tr key={zi}>
+                                <td>{zi}-Zi ({d.m2}m²)</td>
+                                <td>{chf(d.p10*d.m2/12)}</td>
+                                <td className="gd">{chf(d.p50*d.m2/12)}</td>
+                                <td>{chf(d.p90*d.m2/12)}</td>
+                              </tr>;
+                            })}
+                          </tbody>
+                        </table>
+                      )}
+                      {!manualMode&&<div style={{fontSize:"0.65rem",color:"var(--muted)",marginTop:"0.4rem"}}>CHF/Monat · Nettomiete · WP Referenzflächen</div>}
+                    </div>
+                  </div>
+                </div>
+
+                <button className="nb" onClick={()=>setTab(0)}>← Neue Berechnung</button>
+              </>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// Helper used in JSX - checks if kp is available
+function kpCalc(R){ return R&&R.kp>0; }
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
