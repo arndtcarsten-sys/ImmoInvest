@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>WP Parser · ImmoAnalyse</title>
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-FTK322V1MR"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-FTK322V1MR');
+  </script>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <style>
+    :root {
+      --gold:#C9A84C; --gold-dim:#8a6f2e; --gold-bg:rgba(201,168,76,0.08);
+      --bg:#0C0F16; --surface:#141820; --surface2:#1C2130; --border:#252C3D;
+      --text:#E4DDD0; --muted:#6B7280; --faint:#2A3148;
+      --green:#3DAA77; --red:#D95C5C;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:2rem 1rem 4rem;}
+    .wrap{max-width:700px;margin:0 auto;}
+
+    .header{text-align:center;margin-bottom:2.5rem;}
+    .eyebrow{font-size:0.68rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:0.75rem;}
+    h1{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:600;color:var(--text);line-height:1.1;}
+    h1 span{color:var(--gold);}
+    .sub{font-size:0.83rem;color:var(--muted);margin-top:0.5rem;line-height:1.6;}
+
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.75rem;margin-bottom:1.25rem;}
+    .ct{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;color:var(--gold);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;}
+    .ct::before{content:'';width:3px;height:1em;background:var(--gold);border-radius:2px;}
+
+    /* DROPZONE */
+    .dz{border:2px dashed var(--border);border-radius:12px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+    .dz:hover,.dz.drag{border-color:var(--gold);background:var(--gold-bg);}
+    .dz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .dz-icon{font-size:2.5rem;margin-bottom:0.75rem;}
+    .dz-title{font-size:0.95rem;font-weight:500;color:var(--text);margin-bottom:0.35rem;}
+    .dz-sub{font-size:0.78rem;color:var(--muted);}
+
+    /* PROGRESS */
+    .progress{display:none;margin-top:1.25rem;}
+    .progress.show{display:block;}
+    .prog-bar-bg{background:var(--faint);border-radius:4px;height:6px;margin-bottom:0.75rem;}
+    .prog-bar-fill{background:linear-gradient(90deg,var(--gold),var(--gold-dim));border-radius:4px;height:6px;width:0%;transition:width .3s;}
+    .log{font-size:0.78rem;color:var(--muted);line-height:1.8;max-height:220px;overflow-y:auto;background:var(--bg);border-radius:8px;padding:0.75rem 1rem;}
+    .log .ok{color:var(--green);}
+    .log .warn{color:var(--gold);}
+    .log .err{color:var(--red);}
+
+    /* RESULT */
+    .result{display:none;}
+    .result.show{display:block;}
+    .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1.25rem;}
+    @media(max-width:500px){.kpi-grid{grid-template-columns:1fr 1fr;}}
+    .kpi{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:0.85rem;}
+    .kl{font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:0.25rem;}
+    .kv{font-size:0.95rem;font-weight:600;color:var(--gold);}
+    .kv.ok{color:var(--green);}
+    .kv.warn{color:var(--gold);}
+    .kv.miss{color:var(--red);}
+
+    .dl-btn{display:block;width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-dim));border:none;border-radius:10px;padding:1rem;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;color:var(--bg);cursor:pointer;text-align:center;transition:opacity .2s;margin-bottom:0.85rem;}
+    .dl-btn:hover{opacity:.9;}
+    .back-btn{display:block;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.75rem;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--muted);cursor:pointer;text-align:center;transition:all .2s;}
+    .back-btn:hover{border-color:var(--gold-dim);color:var(--text);}
+
+    .ib{background:var(--faint);border-radius:7px;padding:0.65rem 0.9rem;font-size:0.75rem;color:var(--muted);line-height:1.55;margin-top:0.75rem;}
+    .ib b{color:var(--gold);}
+
+    /* STEPS */
+    .steps{display:flex;gap:0;margin-bottom:2rem;}
+    .step{flex:1;text-align:center;font-size:0.72rem;color:var(--muted);padding:0.6rem 0.25rem;border-bottom:2px solid var(--border);transition:all .2s;}
+    .step.on{color:var(--gold);border-bottom-color:var(--gold);}
+    .step.done{color:var(--green);border-bottom-color:var(--green);}
+    .step-num{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--faint);font-size:0.62rem;margin-right:0.3rem;}
+    .step.on .step-num{background:var(--gold-bg);color:var(--gold);}
+    .step.done .step-num{background:rgba(61,170,119,0.15);color:var(--green);}
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <p class="eyebrow">ImmoAnalyse · Hilfstool</p>
+    <h1>WP <span>Parser</span></h1>
+    <p class="sub">Wüest Partner PDF hochladen → JSON für ImmoAnalyse wird automatisch erstellt.<br>Läuft vollständig im Browser — keine Installation nötig.</p>
+  </div>
+
+  <div class="steps">
+    <div class="step on" id="step1"><span class="step-num">1</span>PDF hochladen</div>
+    <div class="step" id="step2"><span class="step-num">2</span>Analyse</div>
+    <div class="step" id="step3"><span class="step-num">3</span>JSON laden</div>
+  </div>
+
+  <div class="card" id="upload-card">
+    <div class="ct">Wüest Partner Report</div>
+    <div class="dz" id="dz"
+      ondragover="ev(event,true)" ondragleave="ev(event,false)" ondrop="drop(event)"
+      onclick="document.getElementById('fi').click()">
+      <input type="file" id="fi" accept=".pdf" onchange="onFile(this.files[0])"/>
+      <div class="dz-icon">📄</div>
+      <div class="dz-title">WP PDF hier ablegen oder klicken</div>
+      <div class="dz-sub">Wüest Partner Location Information Report · beliebige Seitenanzahl</div>
+    </div>
+
+    <div class="progress" id="prog">
+      <div class="prog-bar-bg"><div class="prog-bar-fill" id="bar"></div></div>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+
+  <div class="card result" id="result-card">
+    <div class="ct">Extrahierte Daten</div>
+    <div class="kpi-grid" id="kpis"></div>
+    <button class="dl-btn" id="dl-btn">⬇ JSON herunterladen</button>
+    <button class="back-btn" onclick="reset()">← Neues PDF verarbeiten</button>
+    <div class="ib">
+      <b>Nächster Schritt:</b> ImmoAnalyse öffnen → Tab «WP Import» → JSON-Datei reinziehen → Report erscheint in der Liste → auswählen.
+    </div>
+  </div>
+
+</div>
+<script>
+// Configure pdf.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc =
+  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+// ─── UI HELPERS ─────────────────────────────────────────────────────────────
+let outputData = null;
+let outputName = 'wp_export.json';
+
+function ev(e, on) { e.preventDefault(); document.getElementById('dz').classList.toggle('drag', on); }
+function drop(e) { e.preventDefault(); document.getElementById('dz').classList.remove('drag'); onFile(e.dataTransfer.files[0]); }
+
+function setStep(n) {
+  for (let i = 1; i <= 3; i++) {
+    const el = document.getElementById('step'+i);
+    el.className = 'step' + (i < n ? ' done' : i === n ? ' on' : '');
+    el.querySelector('.step-num').textContent = i < n ? '✓' : i;
+  }
+}
+
+function log(msg, cls='') {
+  const el = document.getElementById('log');
+  el.innerHTML += `<div class="${cls}">${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function setBar(pct) {
+  document.getElementById('bar').style.width = pct + '%';
+}
+
+function reset() {
+  document.getElementById('result-card').classList.remove('show');
+  document.getElementById('upload-card').style.display = '';
+  document.getElementById('prog').classList.remove('show');
+  document.getElementById('log').innerHTML = '';
+  document.getElementById('fi').value = '';
+  setBar(0); setStep(1);
+  outputData = null;
+}
+
+// ─── NUMBER HELPERS ──────────────────────────────────────────────────────────
+function cleanNum(s) {
+  if (!s) return null;
+  const n = parseFloat(String(s).replace(/[',\s%]/g, ''));
+  return isNaN(n) ? null : n;
+}
+
+function findNums(line, minVal = 0) {
+  const matches = [...line.matchAll(/[\d',]+(?:\.\d+)?/g)];
+  return matches.map(m => cleanNum(m[0])).filter(v => v !== null && v > minVal);
+}
+
+// ─── EXTRACTORS ──────────────────────────────────────────────────────────────
+
+function extractGemeinde(text) {
+  const m = text.match(/Municipality\s+([A-ZÄÖÜ][a-zäöü\-]+(?:\s[A-ZÄÖÜ][a-zäöü\-]+)*)/);
+  if (m) return m[1];
+  const m2 = text.match(/Gemeinde\s+([A-ZÄÖÜ][a-zäöü\-]+)/);
+  if (m2) return m2[1];
+  return 'Unbekannt';
+}
+
+function extractKanton(text) {
+  const map = { Aargau:'AG', 'Zürich':'ZH', Bern:'BE', Luzern:'LU',
+    'Basel-Stadt':'BS', 'Basel-Landschaft':'BL', 'St. Gallen':'SG',
+    Thurgau:'TG', Solothurn:'SO', Zug:'ZG', Schwyz:'SZ',
+    'Graubünden':'GR', Wallis:'VS', Waadt:'VD', Genf:'GE',
+    Neuenburg:'NE', Freiburg:'FR', Jura:'JU', Glarus:'GL', Schaffhausen:'SH' };
+  const m = text.match(new RegExp('Canton\\s+(' + Object.keys(map).join('|') + ')'));
+  return m ? (map[m[1]] || 'CH') : 'CH';
+}
+
+function extractDatum(text) {
+  const m = text.match(/Query date:\s*(\d{1,2}\s+\w+\s+\d{4})/);
+  return m ? m[1] : 'Unbekannt';
+}
+
+function extractQuartal(text) {
+  const qs = [...text.matchAll(/(\d{4}\/[1-4])/g)].map(m => m[1]);
+  return qs.length ? qs.sort().reverse()[0] : 'Q?/????';
+}
+
+function extractMiete(text) {
+  const refAreas = [35, 55, 80, 105, 130, 170];
+  const ziLabels = ['1.5','2.5','3.5','4.5','5.5','6.5'];
+  const perzKeys = ['p90','p70','p50','p30','p10'];
+  const miete = {};
+
+  // Find section
+  let start = text.indexOf('price spectrums per property');
+  if (start === -1) start = text.indexOf('CHF per month');
+  if (start === -1) return miete;
+
+  let chunk = text.slice(start, start + 4000);
+  // Cut at MS reg. Aarau
+  const msPos = chunk.indexOf('MS reg');
+  if (msPos > 0) chunk = chunk.slice(0, msPos);
+
+  const lines = chunk.split('\n');
+  const rows = {};
+
+  for (const line of lines) {
+    for (let i = 0; i < 5; i++) {
+      const lbl = ['90th','70th','50th','30th','10th'][i];
+      if (line.toLowerCase().includes(lbl) && line.toLowerCase().includes('percentil')) {
+        const nums = findNums(line, 100).filter(n => n < 20000);
+        if (nums.length >= 6) { rows[perzKeys[i]] = nums.slice(0, 6); break; }
+      }
+    }
+  }
+
+  for (let zi = 0; zi < ziLabels.length; zi++) {
+    const m2 = refAreas[zi];
+    const d = { m2 };
+    for (const pk of perzKeys) {
+      if (rows[pk] && rows[pk][zi] != null) {
+        d[pk] = Math.round((rows[pk][zi] * 12) / m2 * 10) / 10;
+      }
+    }
+    if (Object.keys(d).length > 1) miete[ziLabels[zi]] = d;
+  }
+
+  return miete;
+}
+
+function extractEFH(text) {
+  const efh = {};
+  const sec = text.indexOf('Single-family houses: price range (purchase price in CHF per sqm)');
+  if (sec === -1) return efh;
+  const chunk = text.slice(sec, sec + 1500);
+  const pmap = { '90th':'p90','70th':'p70','50th':'p50','30th':'p30','10th':'p10' };
+  for (const line of chunk.split('\n')) {
+    for (const [lbl, key] of Object.entries(pmap)) {
+      if (line.includes(lbl) && line.toLowerCase().includes('percenti')) {
+        const nums = findNums(line, 1000).filter(n => n < 50000);
+        if (nums.length) { efh[key] = nums[0]; break; }
+      }
+    }
+  }
+  const m = chunk.match(/YOY\s+([-\d.]+)%/);
+  if (m) efh.yoy = parseFloat(m[1]);
+  return efh;
+}
+
+function extractETW(text) {
+  const etw = {};
+  // Summary line: "Owner-occupied apartments (purchase price in CHF per sqm) 2026/1  7,980"
+  const m = text.match(/owner.occupied apartments \(purchase price.*?\)\s+\d{4}\/\d\s+([\d,]+)/i);
+  if (m) etw.p50 = cleanNum(m[1]);
+
+  const sec = text.indexOf('Owner-occupied apartments: price range');
+  if (sec !== -1) {
+    const chunk = text.slice(sec, sec + 1200);
+    const pmap = { '90th':'p90','70th':'p70','50th':'p50','30th':'p30','10th':'p10' };
+    for (const line of chunk.split('\n')) {
+      for (const [lbl, key] of Object.entries(pmap)) {
+        if (line.includes(lbl) && line.toLowerCase().includes('percenti')) {
+          const nums = findNums(line, 1000).filter(n => n < 50000);
+          if (nums.length) { etw[key] = nums[0]; break; }
+        }
+      }
+    }
+  }
+  const m2 = text.match(/Owner-occupied apartments.*?YOY.*?([-\d.]+)%/s);
+  if (m2) etw.yoy = parseFloat(m2[1]);
+  return etw;
+}
+
+function extractBoden(text) {
+  const boden = {};
+
+  function parseSection(keyword) {
+    const sec = text.indexOf(keyword);
+    if (sec === -1) return null;
+    const chunk = text.slice(sec, sec + 800);
+    const vals = {};
+    for (const line of chunk.split('\n')) {
+      for (const [lbl, key] of [['90th','p90'],['50th','p50'],['10th','p10']]) {
+        if (line.includes(lbl) && line.toLowerCase().includes('percenti')) {
+          const nums = findNums(line, 100).filter(n => n < 10000);
+          if (nums.length) { vals[key] = nums[0]; break; }
+        }
+      }
+    }
+    return Object.keys(vals).length ? vals : null;
+  }
+
+  const mfh = parseSection('Multi-family houses: price range for developed building land');
+  if (mfh) boden.mfh = mfh;
+  const efh = parseSection('Single-family houses: price range for developed building land');
+  if (efh) boden.efh = efh;
+  return boden;
+}
+
+function extractMarkt(text) {
+  const markt = { kapSatz: 4.5 };
+
+  function find(pattern, flags = 'is') {
+    const m = text.match(new RegExp(pattern, flags));
+    if (m) return parseFloat(m[1].replace(',', '.'));
+    return null;
+  }
+
+  // Leerstand aus Summary-Tabelle
+  const lMFH = find('Multi.family houses.*?vacanc.*?([\\d.]+)\\s*%');
+  if (lMFH) markt.leerstandMFH = lMFH;
+  const lEFH = find('Single.family houses.*?vacanc.*?([\\d.]+)\\s*%');
+  if (lEFH) markt.leerstandEFH = lEFH;
+
+  // Angebotsraten
+  const am = find('Rented apartments.*?supply rate\\s+\\d{4}\\/\\d\\s+([\\d.]+)\\s*%');
+  if (am) markt.angebotMiete = am;
+  const ae = find('Owner.occupied.*?supply rate\\s+\\d{4}\\/\\d\\s+([\\d.]+)\\s*%');
+  if (ae) markt.angebotETW = ae;
+  const aefh = find('Single.family.*?supply rate\\s+\\d{4}\\/\\d\\s+([\\d.]+)\\s*%');
+  if (aefh) markt.angebotEFH = aefh;
+
+  // Bevölkerungswachstum
+  const bev = find('Population development over 3 years\\s+([\\d.]+)\\s*%', 'i');
+  if (bev) markt.bevWachstum3J = bev;
+
+  // Steuern
+  const st = find('120[,\\s]*000[^%\\d]*([\\d.]+)\\s*%');
+  if (st) markt.steuerlastPaare120k = st;
+
+  // Ratings
+  const refh = find('Single.family houses.*?Overall rating\\s+([\\d.]+)');
+  if (refh) markt.rating_efh = refh;
+  const rmfh = find('Rented apartments.*?Overall rating\\s+([\\d.]+)');
+  if (rmfh) markt.rating_mfh = rmfh;
+  const retw = find('Owner.occupied.*?Overall rating\\s+([\\d.]+)');
+  if (retw) markt.rating_etw = retw;
+
+  return markt;
+}
+
+// ─── MAIN PROCESSOR ──────────────────────────────────────────────────────────
+async function onFile(file) {
+  if (!file || file.type !== 'application/pdf') {
+    alert('Bitte eine PDF-Datei auswählen.');
+    return;
+  }
+
+  setStep(2);
+  document.getElementById('upload-card').style.display = '';
+  document.getElementById('prog').classList.add('show');
+  document.getElementById('log').innerHTML = '';
+  setBar(5);
+  log(`📄 Datei: <b>${file.name}</b> (${(file.size/1024).toFixed(0)} KB)`);
+
+  try {
+    // Read PDF
+    const arrayBuffer = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+    const pageCount = pdf.numPages;
+    log(`✓ ${pageCount} Seiten erkannt`, 'ok');
+    setBar(15);
+
+    // Extract text from all pages
+    let fullText = '';
+    for (let i = 1; i <= pageCount; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      // Reconstruct text preserving rough layout
+      const items = content.items;
+      let pageText = '';
+      let lastY = null;
+      for (const item of items) {
+        if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) {
+          pageText += '\n';
+        }
+        pageText += item.str + ' ';
+        lastY = item.transform[5];
+      }
+      fullText += pageText + '\n';
+      if (i % 10 === 0 || i === pageCount) {
+        setBar(15 + Math.round((i / pageCount) * 55));
+        log(`  Seite ${i}/${pageCount} verarbeitet...`);
+      }
+    }
+
+    log(`✓ Text extrahiert (${fullText.length.toLocaleString()} Zeichen)`, 'ok');
+    setBar(72);
+
+    // Extract data
+    log('🔍 Analysiere Marktdaten...');
+    const gemeinde = extractGemeinde(fullText);
+    const kanton   = extractKanton(fullText);
+    const datum    = extractDatum(fullText);
+    const quartal  = extractQuartal(fullText);
+
+    log(`📍 Standort: <b>${gemeinde}</b>, ${kanton} · ${quartal}`, 'ok');
+    setBar(78);
+
+    const miete = extractMiete(fullText);
+    log(`🏘️ Mietpreise: ${Object.keys(miete).length} Zimmertypen ${Object.keys(miete).length >= 4 ? '✓' : '⚠ (evtl. Seite 6 fehlt)'}`
+      , Object.keys(miete).length >= 4 ? 'ok' : 'warn');
+    setBar(83);
+
+    const efh = extractEFH(fullText);
+    log(`🏡 EFH-Preise: ${Object.keys(efh).length} Felder ${efh.p50 ? '✓' : '⚠'}`, efh.p50 ? 'ok' : 'warn');
+    setBar(87);
+
+    const etw = extractETW(fullText);
+    log(`🏠 ETW-Preise: ${Object.keys(etw).length} Felder ${etw.p50 ? '✓' : '⚠ (evtl. im Summary)'}`, etw.p50 ? 'ok' : 'warn');
+    setBar(91);
+
+    const boden = extractBoden(fullText);
+    log(`🌍 Bodenpreise: ${Object.keys(boden).length} Typen`, Object.keys(boden).length ? 'ok' : 'warn');
+    setBar(95);
+
+    const markt = extractMarkt(fullText);
+    const marktFields = Object.keys(markt).length;
+    log(`📈 Marktdaten: ${marktFields} Felder extrahiert`, marktFields > 3 ? 'ok' : 'warn');
+    setBar(100);
+
+    // Build output
+    const data = {
+      name:     `${gemeinde} ${kanton} — Wüest Partner`,
+      gemeinde, kanton, datum, quartal,
+      miete, etw, efh, boden, markt
+    };
+
+    outputData = JSON.stringify(data, null, 2);
+    outputName = `${gemeinde.replace(/[^a-zA-Z0-9]/g,'_')}_${quartal.replace('/','_')}.json`;
+
+    log(`<br>✅ <b>Fertig! JSON bereit zum Herunterladen.</b>`, 'ok');
+
+    // Show result
+    showResult(data);
+
+  } catch (err) {
+    log(`❌ Fehler: ${err.message}`, 'err');
+    log('Bitte prüfen ob das PDF nicht passwortgeschützt ist.', 'err');
+    setBar(0);
+  }
+}
+
+function showResult(data) {
+  setStep(3);
+
+  // Build KPI cards
+  const kpis = [
+    ['Standort', data.gemeinde + ', ' + data.kanton, 'ok'],
+    ['Quartal', data.quartal, 'ok'],
+    ['Mietpreise', Object.keys(data.miete).length + ' Zimmertypen',
+      Object.keys(data.miete).length >= 4 ? 'ok' : 'warn'],
+    ['EFH Median', data.efh.p50 ? 'CHF ' + data.efh.p50.toLocaleString('de-CH') + '/m²' : 'Fehlt',
+      data.efh.p50 ? 'ok' : 'miss'],
+    ['ETW Median', data.etw.p50 ? 'CHF ' + data.etw.p50.toLocaleString('de-CH') + '/m²' : 'Fehlt',
+      data.etw.p50 ? 'ok' : 'warn'],
+    ['Bodenpreise', Object.keys(data.boden).length + ' Typen',
+      Object.keys(data.boden).length ? 'ok' : 'warn'],
+    ['Kap.-Satz', (data.markt.kapSatz || '—') + '%', 'warn'],
+    ['Leerstand MFH', data.markt.leerstandMFH ? data.markt.leerstandMFH + '%' : 'n/a',
+      data.markt.leerstandMFH ? 'ok' : 'warn'],
+    ['WP-Rating EFH', data.markt.rating_efh ? data.markt.rating_efh + '/5' : 'n/a',
+      data.markt.rating_efh ? 'ok' : 'warn'],
+  ];
+
+  document.getElementById('kpis').innerHTML = kpis.map(([l,v,c]) =>
+    `<div class="kpi"><div class="kl">${l}</div><div class="kv ${c}">${v}</div></div>`
+  ).join('');
+
+  // Download handler
+  document.getElementById('dl-btn').onclick = () => {
+    const blob = new Blob([outputData], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = outputName; a.click();
+    URL.revokeObjectURL(url);
+    if (typeof gtag !== 'undefined') gtag('event', 'wp_json_download', { file: outputName });
+  };
+
+  document.getElementById('result-card').classList.add('show');
+}
+</script>
+</body>
+</html>
