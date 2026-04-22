@@ -200,6 +200,36 @@
     .pill.no-data-pill{border-color:rgba(217,92,92,0.4)!important;color:rgba(217,92,92,0.6)!important;cursor:not-allowed!important;}
     .pill.no-data-pill.on{border-color:var(--red)!important;background:rgba(217,92,92,0.12)!important;color:var(--red)!important;}
     .manual-alert{background:rgba(217,92,92,0.08);border:1px solid rgba(217,92,92,0.25);border-radius:8px;padding:0.65rem 0.9rem;font-size:0.75rem;color:var(--red);line-height:1.5;margin-bottom:1rem;display:flex;gap:0.5rem;align-items:flex-start;}
+    /* SAVE / LOAD */
+    .sl-bar{display:flex;align-items:center;gap:0.6rem;background:var(--faint);border-radius:10px;padding:0.7rem 1rem;margin-bottom:1.25rem;flex-wrap:wrap;}
+    .sl-input{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:0.45rem 0.8rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.84rem;flex:1;min-width:140px;}
+    .sl-input:focus{outline:none;border-color:var(--gold);}
+    .sl-btn{padding:0.45rem 1rem;border-radius:7px;border:1px solid var(--border);background:var(--bg);color:var(--muted);font-family:'DM Sans',sans-serif;font-size:0.8rem;cursor:pointer;transition:all .18s;white-space:nowrap;}
+    .sl-btn:hover{border-color:var(--gold-dim);color:var(--text);}
+    .sl-btn.save{background:var(--gold-bg);border-color:var(--gold-dim);color:var(--gold);}
+    .sl-btn.save:hover{background:rgba(201,168,76,0.15);}
+    .saved-list{display:flex;flex-direction:column;gap:0.5rem;margin-top:0.5rem;}
+    .saved-item{display:flex;align-items:center;justify-content:space-between;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:0.65rem 0.9rem;gap:0.5rem;}
+    .saved-item-name{font-size:0.84rem;font-weight:500;color:var(--text);flex:1;}
+    .saved-item-meta{font-size:0.68rem;color:var(--muted);}
+    .si-btn{background:none;border:1px solid var(--border);border-radius:6px;padding:0.25rem 0.65rem;font-family:'DM Sans',sans-serif;font-size:0.73rem;color:var(--muted);cursor:pointer;transition:all .18s;}
+    .si-btn:hover{border-color:var(--gold-dim);color:var(--gold);}
+    .si-btn.del:hover{border-color:var(--red);color:var(--red);}
+    .si-btn.comp{border-color:rgba(74,143,212,0.4);color:#4A8FD4;}
+    .si-btn.comp:hover{border-color:#4A8FD4;background:rgba(74,143,212,0.1);}
+    .si-btn.comp.on{background:rgba(74,143,212,0.15);border-color:#4A8FD4;color:#4A8FD4;}
+    /* COMPARE TAB */
+    .cmp-table{width:100%;border-collapse:collapse;}
+    .cmp-table th{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);padding:0.5rem 0.75rem;border-bottom:1px solid var(--border);text-align:right;background:var(--bg);}
+    .cmp-table th:first-child{text-align:left;position:sticky;left:0;background:var(--bg);z-index:1;}
+    .cmp-table td{font-size:0.83rem;padding:0.5rem 0.75rem;border-bottom:1px solid var(--faint);text-align:right;color:var(--text);}
+    .cmp-table td:first-child{text-align:left;color:var(--muted);font-size:0.78rem;position:sticky;left:0;background:var(--surface);z-index:1;}
+    .cmp-table tr.cmp-sect td{background:var(--faint);font-size:0.65rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);padding:0.4rem 0.75rem;font-weight:600;}
+    .cmp-table tr.cmp-sect td:first-child{background:var(--faint);}
+    .cmp-best{color:var(--green)!important;font-weight:600;}
+    .cmp-wrap{overflow-x:auto;}
+    .cmp-name-badge{display:inline-block;padding:0.2rem 0.6rem;border-radius:5px;font-size:0.7rem;font-weight:600;margin-bottom:0.3rem;}
+    .empty-cmp{text-align:center;padding:3rem;color:var(--muted);font-size:0.88rem;}
   </style>
 </head>
 <body>
@@ -249,8 +279,13 @@ function pct(n,d=2){if(n==null||isNaN(n))return"—";return n.toFixed(d)+"%";}
 
 const TABS=[
   {l:"WP Import",i:"📂"},{l:"Objekt",i:"🏢"},{l:"Wohnungsmix",i:"🏘️"},
-  {l:"Kosten",i:"⚙️"},{l:"Ergebnis",i:"📊"},
+  {l:"Kosten",i:"⚙️"},{l:"Ergebnis",i:"📊"},{l:"Vergleich",i:"⚖️"},
 ];
+
+const CMP_COLORS=["#C9A84C","#4A8FD4","#3DAA77"];
+
+function loadSaved(){try{return JSON.parse(localStorage.getItem("immo_saved")||"[]");}catch{return[];}}
+function writeSaved(arr){try{localStorage.setItem("immo_saved",JSON.stringify(arr));}catch{}}
 
 const defaultMix=()=>ZI.map(zi=>({zi,anzahl:"",m2:"",seg:"p50",on:false,manMiete:""}));
 const defaultSan=()=>[
@@ -268,6 +303,9 @@ function App(){
   const [manualMode,setManualMode]=useState(false);
   const [sanOpen,setSanOpen]=useState(false);
   const [sanPos,setSanPos]=useState(defaultSan());
+  const [savedProjects,setSavedProjects]=useState(loadSaved);
+  const [saveName,setSaveName]=useState("");
+  const [compareIds,setCompareIds]=useState([]); // up to 3 project ids selected for compare
   const [form,setForm]=useState({
     typ:"MFH",baujahr:"1960",zustand:"Gut",grundstueck:"",
     wfEFH:"",zimEFH:"5",segEFH:"p50",kaufpreis:"",wfTotal:"",
@@ -287,6 +325,42 @@ function App(){
   const report=reports.find(r=>r.id===activeId)||reports[0];
   const sf=(k,v)=>setForm(f=>({...f,[k]:v}));
   const setMix=(idx,k,v)=>setForm(f=>({...f,mix:f.mix.map((m,i)=>i===idx?{...m,[k]:v}:m)}));
+
+  // ── SAVE / LOAD / COMPARE ────────────────────────────────────────────────
+  const saveProject=()=>{
+    const name=saveName.trim()||("Projekt "+(savedProjects.length+1));
+    const project={
+      id:"p-"+Date.now(), name, savedAt:new Date().toLocaleDateString("de-CH"),
+      form, manualMode, sanPos,
+      snapshot: R ? {
+        kp:R.kp, gi:R.gi, jsm:R.jsm, noi:R.noi,
+        brutto:R.brutto, netto:R.netto,
+        ekRend:R.ekRend, ekRendOhneAmort:R.ekRendOhneAmort,
+        cashflowVorAmort:R.cashflowVorAmort, cashflowNachAmort:R.cashflowNachAmort,
+        h1Betrag:R.h1Betrag, h2Betrag:R.h2Betrag, ekBetrag:R.ekBetrag,
+        sanTotal:R.sanTotal, totalZinsJ:R.totalZinsJ, h2AmortJ:R.h2AmortJ,
+        typ:form.typ, baujahr:form.baujahr, zustand:form.zustand
+      } : null
+    };
+    const updated=[...savedProjects, project];
+    setSavedProjects(updated); writeSaved(updated); setSaveName("");
+  };
+  const deleteProject=(id)=>{
+    const updated=savedProjects.filter(p=>p.id!==id);
+    setSavedProjects(updated); writeSaved(updated);
+    setCompareIds(ci=>ci.filter(x=>x!==id));
+  };
+  const loadProject=(project)=>{
+    setForm(project.form); setManualMode(project.manualMode||false);
+    setSanPos(project.sanPos||defaultSan()); setTab(4);
+  };
+  const toggleCompare=(id)=>{
+    setCompareIds(ci=>{
+      if(ci.includes(id)) return ci.filter(x=>x!==id);
+      if(ci.length>=3) return ci;
+      return [...ci,id];
+    });
+  };
 
   // ── SANIERUNG HELPERS ────────────────────────────────────────────────────
   const setSan=(id,k,v)=>setSanPos(ps=>ps.map(p=>p.id===id?{...p,[k]:v}:p));
@@ -926,6 +1000,14 @@ function App(){
                   Ergebnis wird live bei jeder Änderung aktualisiert — kein Berechnen-Button nötig
                 </div>
 
+                {/* SAVE BAR */}
+                <div className="sl-bar">
+                  <input className="sl-input" placeholder="Projektname (z.B. Veilchenweg 4)" value={saveName} onChange={e=>setSaveName(e.target.value)}
+                    onKeyDown={e=>e.key==="Enter"&&saveProject()}/>
+                  <button className="sl-btn save" onClick={saveProject}>💾 Speichern</button>
+                  {savedProjects.length>0&&<button className="sl-btn" onClick={()=>setTab(5)}>⚖️ Vergleich ({compareIds.length}/3)</button>}
+                </div>
+
                 {/* HERO */}
                 <div className="hero">
                   <div className="hero-top">
@@ -1149,10 +1231,170 @@ function App(){
                 </div>
 
                 <button className="nb" onClick={()=>setTab(0)}>← Neue Berechnung</button>
+
+                {/* SAVED PROJECTS QUICK LIST */}
+                {savedProjects.length>0&&(
+                  <div className="card" style={{marginTop:"1.25rem"}}>
+                    <div className="ct">Gespeicherte Projekte</div>
+                    <div className="saved-list">
+                      {savedProjects.map((p,i)=>(
+                        <div key={p.id} className="saved-item">
+                          <div>
+                            <div className="saved-item-name">{p.name}</div>
+                            <div className="saved-item-meta">
+                              {p.snapshot?`GI: ${chf(p.snapshot.gi)} · NOI-Rendite: ${pct(p.snapshot.netto)}`:""} · {p.savedAt}
+                            </div>
+                          </div>
+                          <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}>
+                            <button className={`si-btn comp ${compareIds.includes(p.id)?"on":""}`}
+                              onClick={()=>toggleCompare(p.id)}
+                              style={compareIds.includes(p.id)?{background:`${CMP_COLORS[compareIds.indexOf(p.id)]}22`,borderColor:CMP_COLORS[compareIds.indexOf(p.id)],color:CMP_COLORS[compareIds.indexOf(p.id)]}:{}}>
+                              {compareIds.includes(p.id)?`✓ Var. ${compareIds.indexOf(p.id)+1}`:"+ Vergleich"}
+                            </button>
+                            <button className="si-btn" onClick={()=>loadProject(p)}>Laden</button>
+                            <button className="si-btn del" onClick={()=>deleteProject(p.id)}>✕</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    {compareIds.length>=2&&<button className="sl-btn save" style={{marginTop:"0.75rem",width:"100%"}} onClick={()=>setTab(5)}>⚖️ Vergleich starten ({compareIds.length} Varianten)</button>}
+                  </div>
+                )}
               </>
             )}
           </div>
         )}
+        {/* ═══ TAB 5: VERGLEICH ═══ */}
+        {tab===5&&(()=>{
+          const sel=compareIds.map(id=>savedProjects.find(p=>p.id===id)).filter(Boolean);
+          const snap=p=>p.snapshot||{};
+          // find best value among selected for a metric (higher = better unless inverted)
+          const best=(key,invert=false)=>{
+            if(sel.length<2)return null;
+            const vals=sel.map(p=>snap(p)[key]??null).filter(v=>v!=null);
+            return invert?Math.min(...vals):Math.max(...vals);
+          };
+          const cell=(p,key,fmt,invert=false)=>{
+            const v=snap(p)[key];
+            const b=best(key,invert);
+            const isBest=b!=null&&v!=null&&Math.abs(v-b)<0.001;
+            return<td key={p.id} className={isBest?"cmp-best":""}>{fmt(v)}</td>;
+          };
+          return(
+            <div>
+              <div className="card">
+                <div className="ct">Variantenvergleich</div>
+                <p className="cs">Bis zu 3 gespeicherte Projekte vergleichen — im Tab "Ergebnis" speichern, hier auswählen</p>
+
+                {savedProjects.length===0?(
+                  <div className="empty-cmp">
+                    <div style={{fontSize:"2.5rem",marginBottom:"0.5rem"}}>📁</div>
+                    Noch keine gespeicherten Projekte. Fülle ein Objekt aus, speichere es im Ergebnis-Tab und kehre hierher zurück.
+                  </div>
+                ):(
+                  <>
+                    {/* PROJECT SELECTOR */}
+                    <div className="saved-list">
+                      {savedProjects.map((p,i)=>(
+                        <div key={p.id} className="saved-item">
+                          <div>
+                            <div className="saved-item-name">{p.name}</div>
+                            <div className="saved-item-meta">{p.snapshot?.typ||"—"} · BJ {p.snapshot?.baujahr||"—"} · {p.savedAt}</div>
+                          </div>
+                          <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}>
+                            <button className={`si-btn comp ${compareIds.includes(p.id)?"on":""}`}
+                              onClick={()=>toggleCompare(p.id)}
+                              style={compareIds.includes(p.id)?{background:`${CMP_COLORS[compareIds.indexOf(p.id)]}22`,borderColor:CMP_COLORS[compareIds.indexOf(p.id)],color:CMP_COLORS[compareIds.indexOf(p.id)]}:{}}>
+                              {compareIds.includes(p.id)?`✓ Variante ${compareIds.indexOf(p.id)+1}`:"Vergleichen"}
+                            </button>
+                            <button className="si-btn" onClick={()=>loadProject(p)}>Laden</button>
+                            <button className="si-btn del" onClick={()=>deleteProject(p.id)}>✕</button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* COMPARE TABLE */}
+                    {sel.length>=2?(
+                      <div style={{marginTop:"1.5rem"}}>
+                        <div className="sec">Gegenüberstellung</div>
+                        <div className="cmp-wrap">
+                          <table className="cmp-table">
+                            <thead>
+                              <tr>
+                                <th style={{textAlign:"left"}}>Kennzahl</th>
+                                {sel.map((p,i)=>(
+                                  <th key={p.id}>
+                                    <div className="cmp-name-badge" style={{background:`${CMP_COLORS[i]}22`,color:CMP_COLORS[i],border:`1px solid ${CMP_COLORS[i]}55`}}>
+                                      Var. {i+1}
+                                    </div>
+                                    <div style={{fontWeight:600,color:"var(--text)",fontSize:"0.78rem"}}>{p.name}</div>
+                                    <div style={{color:"var(--muted)",fontWeight:400,fontSize:"0.67rem"}}>{snap(p).typ||"—"} · BJ {snap(p).baujahr||"—"}</div>
+                                  </th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <tr className="cmp-sect"><td colSpan={sel.length+1}>Investition</td></tr>
+                              <tr><td>Kaufpreis</td>{sel.map(p=>cell(p,"kp",chf))}</tr>
+                              <tr><td>Sanierung / Anbau</td>{sel.map(p=>cell(p,"sanTotal",chf))}</tr>
+                              <tr><td>Gesamtinvestition</td>{sel.map(p=>cell(p,"gi",chf))}</tr>
+                              <tr><td>Eigenkapital</td>{sel.map(p=>cell(p,"ekBetrag",chf))}</tr>
+
+                              <tr className="cmp-sect"><td colSpan={sel.length+1}>Ertrag</td></tr>
+                              <tr><td>Brutto-Sollmiete</td>{sel.map(p=>cell(p,"jsm",chf))}</tr>
+                              <tr><td>NOI (Nettomietertrag)</td>{sel.map(p=>cell(p,"noi",chf))}</tr>
+                              <tr><td>Total Zinslast p.a.</td>{sel.map(p=>cell(p,"totalZinsJ",v=>chf(v),true))}</tr>
+                              <tr><td>Amortisation 2. Hypo</td>{sel.map(p=>cell(p,"h2AmortJ",v=>chf(v),true))}</tr>
+                              <tr><td>Cashflow vor Amortisation</td>{sel.map(p=>cell(p,"cashflowVorAmort",v=>{const c=chf(Math.abs(v));return v<0?"- "+c:"+"+c;}))}</tr>
+                              <tr><td>Cashflow nach Amortisation</td>{sel.map(p=>cell(p,"cashflowNachAmort",v=>{const c=chf(Math.abs(v));return v<0?"- "+c:"+"+c;}))}</tr>
+
+                              <tr className="cmp-sect"><td colSpan={sel.length+1}>Renditen</td></tr>
+                              <tr><td>Bruttomietrendite</td>{sel.map(p=>cell(p,"brutto",pct))}</tr>
+                              <tr><td>Nettomietrendite (NOI)</td>{sel.map(p=>cell(p,"netto",pct))}</tr>
+                              <tr><td>EK-Rendite (Liquidität)</td>{sel.map(p=>cell(p,"ekRend",pct))}</tr>
+                              <tr><td>EK-Rendite (Gesamtrendite)</td>{sel.map(p=>cell(p,"ekRendOhneAmort",pct))}</tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="ib" style={{marginTop:"0.75rem"}}>
+                          <b>Grün markiert</b> = bester Wert der verglichenen Varianten in dieser Kennzahl.
+                          Investitions- und Kostenpositionen: niedrigster Wert = best. Ertrags- und Renditepositionen: höchster Wert = best.
+                        </div>
+                      </div>
+                    ):(
+                      <div className="ib" style={{marginTop:"1rem"}}>Wähle mindestens 2 Varianten aus der Liste oben aus um den Vergleich zu starten.</div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* SAVED PROJECTS MANAGEMENT */}
+              {savedProjects.length>0&&(
+                <div className="card">
+                  <div className="ct">Alle gespeicherten Projekte</div>
+                  <div className="saved-list">
+                    {savedProjects.map(p=>(
+                      <div key={p.id} className="saved-item">
+                        <div>
+                          <div className="saved-item-name">{p.name}</div>
+                          <div className="saved-item-meta">
+                            {p.snapshot?`GI: ${chf(p.snapshot.gi)} · Rendite: ${pct(p.snapshot.netto)} · EK-Rendite: ${pct(p.snapshot.ekRend)}`:""} · {p.savedAt}
+                          </div>
+                        </div>
+                        <div style={{display:"flex",gap:"0.4rem"}}>
+                          <button className="si-btn" onClick={()=>loadProject(p)}>Laden</button>
+                          <button className="si-btn del" onClick={()=>deleteProject(p.id)}>✕</button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
+
       </div>
     </div>
   );
