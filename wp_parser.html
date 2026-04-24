@@ -3,84 +3,101 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>WP Parser · ImmoAnalyse</title>
-  <!-- Google tag (gtag.js) -->
+  <title>WP Dateneingabe · ImmoAnalyse</title>
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-FTK322V1MR"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'G-FTK322V1MR');
-  </script>
+  <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-FTK322V1MR');</script>
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <style>
-    :root {
-      --gold:#C9A84C; --gold-dim:#8a6f2e; --gold-bg:rgba(201,168,76,0.08);
-      --bg:#0C0F16; --surface:#141820; --surface2:#1C2130; --border:#252C3D;
-      --text:#E4DDD0; --muted:#6B7280; --faint:#2A3148;
-      --green:#3DAA77; --red:#D95C5C;
+    :root{
+      --gold:#C9A84C;--gold-dim:#8a6f2e;--gold-bg:rgba(201,168,76,0.08);
+      --bg:#0C0F16;--surface:#141820;--border:#252C3D;--text:#E4DDD0;
+      --muted:#6B7280;--faint:#2A3148;--green:#3DAA77;--red:#D95C5C;
     }
     *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:2rem 1rem 4rem;}
-    .wrap{max-width:700px;margin:0 auto;}
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:2rem 1rem 5rem;}
+    .wrap{max-width:820px;margin:0 auto;}
 
-    .header{text-align:center;margin-bottom:2.5rem;}
-    .eyebrow{font-size:0.68rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:0.75rem;}
-    h1{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:600;color:var(--text);line-height:1.1;}
+    /* HEADER */
+    .header{text-align:center;margin-bottom:2rem;}
+    .eyebrow{font-size:0.67rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--gold);margin-bottom:0.6rem;}
+    h1{font-family:'Cormorant Garamond',serif;font-size:2.2rem;font-weight:600;line-height:1.1;}
     h1 span{color:var(--gold);}
-    .sub{font-size:0.83rem;color:var(--muted);margin-top:0.5rem;line-height:1.6;}
+    .sub{font-size:0.82rem;color:var(--muted);margin-top:0.4rem;line-height:1.6;}
 
-    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.75rem;margin-bottom:1.25rem;}
-    .ct{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;color:var(--gold);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;}
-    .ct::before{content:'';width:3px;height:1em;background:var(--gold);border-radius:2px;}
+    /* MODE TOGGLE */
+    .mode-bar{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--border);border-radius:11px;overflow:hidden;margin-bottom:1.5rem;}
+    .mbt{padding:0.85rem 1rem;text-align:center;cursor:pointer;font-family:'DM Sans',sans-serif;font-size:0.83rem;font-weight:500;color:var(--muted);background:var(--bg);border:none;transition:all .18s;user-select:none;}
+    .mbt.on{background:var(--gold-bg);color:var(--gold);}
 
-    /* DROPZONE */
-    .dz{border:2px dashed var(--border);border-radius:12px;padding:3rem 2rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;}
+    /* CARDS */
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:1.6rem;margin-bottom:1.2rem;}
+    .ct{font-family:'Cormorant Garamond',serif;font-size:1.05rem;font-weight:600;color:var(--gold);margin-bottom:1.1rem;display:flex;align-items:center;gap:0.5rem;}
+    .ct::before{content:'';width:3px;height:1em;background:var(--gold);border-radius:2px;flex-shrink:0;}
+    .cs{font-size:0.72rem;color:var(--muted);margin-top:-0.65rem;margin-bottom:1rem;}
+
+    /* GRIDS */
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:0.85rem;}
+    .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.85rem;}
+    .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:0.85rem;}
+    @media(max-width:600px){.g2,.g3,.g4{grid-template-columns:1fr 1fr;}}
+    @media(max-width:400px){.g2,.g3,.g4{grid-template-columns:1fr;}}
+
+    /* FIELDS */
+    .f{display:flex;flex-direction:column;gap:0.3rem;}
+    .f label{font-size:0.67rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--muted);font-weight:500;}
+    .f input,.f select{background:var(--bg);border:1px solid var(--border);border-radius:7px;padding:0.55rem 0.8rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.88rem;width:100%;transition:border-color .18s;}
+    .f input:focus,.f select:focus{outline:none;border-color:var(--gold);}
+    .f .hint{font-size:0.64rem;color:var(--muted);margin-top:0.1rem;}
+
+    /* SECTION SEPARATOR */
+    .sec{font-size:0.66rem;text-transform:uppercase;letter-spacing:0.1em;color:var(--muted);margin:1.25rem 0 0.75rem;display:flex;align-items:center;gap:0.6rem;}
+    .sec::after{content:'';flex:1;height:1px;background:var(--border);}
+
+    /* MIX TABLE */
+    .mt-wrap{overflow-x:auto;}
+    table.mt{width:100%;border-collapse:collapse;min-width:560px;}
+    table.mt th{font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);padding:0.4rem 0.5rem;border-bottom:1px solid var(--border);text-align:right;white-space:nowrap;}
+    table.mt th:first-child{text-align:left;}
+    table.mt td{padding:0.35rem 0.4rem;border-bottom:1px solid var(--faint);vertical-align:middle;}
+    table.mt input{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:0.32rem 0.55rem;color:var(--text);font-family:'DM Sans',sans-serif;font-size:0.82rem;width:100%;text-align:right;}
+    table.mt input:focus{outline:none;border-color:var(--gold);}
+    table.mt td.zi-label{font-size:0.82rem;font-weight:500;white-space:nowrap;padding-left:0.6rem;}
+    table.mt td.zi-m2{font-size:0.68rem;color:var(--muted);}
+    table.mt tr.total td{border-top:1px solid var(--border);font-size:0.75rem;color:var(--muted);padding-top:0.5rem;}
+
+    /* BUTTONS */
+    .btn-primary{display:block;width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-dim));border:none;border-radius:10px;padding:1rem;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;color:var(--bg);cursor:pointer;transition:opacity .2s;margin-top:1.5rem;}
+    .btn-primary:hover{opacity:.9;}
+    .btn-sec{display:block;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.75rem;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--muted);cursor:pointer;transition:all .18s;margin-top:0.6rem;}
+    .btn-sec:hover{border-color:var(--gold-dim);color:var(--text);}
+
+    /* INFO BOX */
+    .ib{background:var(--faint);border-radius:7px;padding:0.65rem 0.9rem;font-size:0.74rem;color:var(--muted);line-height:1.55;margin-top:0.75rem;}
+    .ib b{color:var(--gold);}
+
+    /* PDF SECTION */
+    .dz{border:2px dashed var(--border);border-radius:11px;padding:2rem;text-align:center;cursor:pointer;transition:all .2s;position:relative;margin-bottom:0.75rem;}
     .dz:hover,.dz.drag{border-color:var(--gold);background:var(--gold-bg);}
-    .dz input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
-    .dz-icon{font-size:2.5rem;margin-bottom:0.75rem;}
-    .dz-title{font-size:0.95rem;font-weight:500;color:var(--text);margin-bottom:0.35rem;}
-    .dz-sub{font-size:0.78rem;color:var(--muted);}
-
-    /* PROGRESS */
-    .progress{display:none;margin-top:1.25rem;}
-    .progress.show{display:block;}
-    .prog-bar-bg{background:var(--faint);border-radius:4px;height:6px;margin-bottom:0.75rem;}
-    .prog-bar-fill{background:linear-gradient(90deg,var(--gold),var(--gold-dim));border-radius:4px;height:6px;width:0%;transition:width .3s;}
-    .log{font-size:0.78rem;color:var(--muted);line-height:1.8;max-height:220px;overflow-y:auto;background:var(--bg);border-radius:8px;padding:0.75rem 1rem;}
+    .dz input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;}
+    .prog{display:none;margin-top:0.85rem;}
+    .prog.show{display:block;}
+    .prog-bg{background:var(--faint);border-radius:4px;height:5px;margin-bottom:0.5rem;}
+    .prog-fill{background:linear-gradient(90deg,var(--gold),var(--gold-dim));border-radius:4px;height:5px;width:0%;transition:width .3s;}
+    .log{font-size:0.74rem;color:var(--muted);line-height:1.7;max-height:160px;overflow-y:auto;background:var(--bg);border-radius:7px;padding:0.65rem 0.85rem;}
     .log .ok{color:var(--green);}
     .log .warn{color:var(--gold);}
     .log .err{color:var(--red);}
 
-    /* RESULT */
-    .result{display:none;}
-    .result.show{display:block;}
-    .kpi-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:0.75rem;margin-bottom:1.25rem;}
-    @media(max-width:500px){.kpi-grid{grid-template-columns:1fr 1fr;}}
-    .kpi{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:0.85rem;}
-    .kl{font-size:0.63rem;text-transform:uppercase;letter-spacing:0.07em;color:var(--muted);margin-bottom:0.25rem;}
-    .kv{font-size:0.95rem;font-weight:600;color:var(--gold);}
-    .kv.ok{color:var(--green);}
-    .kv.warn{color:var(--gold);}
-    .kv.miss{color:var(--red);}
+    /* PREVIEW */
+    .preview{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:1rem;margin-top:0.85rem;font-size:0.78rem;color:var(--muted);font-family:monospace;max-height:200px;overflow-y:auto;white-space:pre-wrap;word-break:break-all;display:none;}
+    .preview.show{display:block;}
 
-    .dl-btn{display:block;width:100%;background:linear-gradient(135deg,var(--gold),var(--gold-dim));border:none;border-radius:10px;padding:1rem;font-family:'DM Sans',sans-serif;font-size:0.95rem;font-weight:600;color:var(--bg);cursor:pointer;text-align:center;transition:opacity .2s;margin-bottom:0.85rem;}
-    .dl-btn:hover{opacity:.9;}
-    .back-btn{display:block;width:100%;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:0.75rem;font-family:'DM Sans',sans-serif;font-size:0.85rem;color:var(--muted);cursor:pointer;text-align:center;transition:all .2s;}
-    .back-btn:hover{border-color:var(--gold-dim);color:var(--text);}
-
-    .ib{background:var(--faint);border-radius:7px;padding:0.65rem 0.9rem;font-size:0.75rem;color:var(--muted);line-height:1.55;margin-top:0.75rem;}
-    .ib b{color:var(--gold);}
-
-    /* STEPS */
-    .steps{display:flex;gap:0;margin-bottom:2rem;}
-    .step{flex:1;text-align:center;font-size:0.72rem;color:var(--muted);padding:0.6rem 0.25rem;border-bottom:2px solid var(--border);transition:all .2s;}
-    .step.on{color:var(--gold);border-bottom-color:var(--gold);}
-    .step.done{color:var(--green);border-bottom-color:var(--green);}
-    .step-num{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:var(--faint);font-size:0.62rem;margin-right:0.3rem;}
-    .step.on .step-num{background:var(--gold-bg);color:var(--gold);}
-    .step.done .step-num{background:rgba(61,170,119,0.15);color:var(--green);}
+    /* SUCCESS */
+    .success-box{background:rgba(61,170,119,0.08);border:1px solid rgba(61,170,119,0.3);border-radius:10px;padding:1.25rem;text-align:center;margin-bottom:1rem;display:none;}
+    .success-box.show{display:block;}
+    .success-box .si{font-size:2rem;margin-bottom:0.5rem;}
+    .success-box p{font-size:0.82rem;color:var(--muted);margin-top:0.35rem;}
   </style>
 </head>
 <body>
@@ -88,419 +105,502 @@
 
   <div class="header">
     <p class="eyebrow">ImmoAnalyse · Hilfstool</p>
-    <h1>WP <span>Parser</span></h1>
-    <p class="sub">Wüest Partner PDF hochladen → JSON für ImmoAnalyse wird automatisch erstellt.<br>Läuft vollständig im Browser — keine Installation nötig.</p>
+    <h1>WP <span>Dateneingabe</span></h1>
+    <p class="sub">Wüest Partner Marktdaten erfassen und als JSON für ImmoAnalyse exportieren.</p>
   </div>
 
-  <div class="steps">
-    <div class="step on" id="step1"><span class="step-num">1</span>PDF hochladen</div>
-    <div class="step" id="step2"><span class="step-num">2</span>Analyse</div>
-    <div class="step" id="step3"><span class="step-num">3</span>JSON laden</div>
+  <!-- MODE TOGGLE -->
+  <div class="mode-bar">
+    <button class="mbt on" id="btn-manual" onclick="setMode('manual')">✏️ Manuelle Eingabe</button>
+    <button class="mbt" id="btn-pdf" onclick="setMode('pdf')">📄 PDF-Parser (Beta)</button>
   </div>
 
-  <div class="card" id="upload-card">
-    <div class="ct">Wüest Partner Report</div>
-    <div class="dz" id="dz"
-      ondragover="ev(event,true)" ondragleave="ev(event,false)" ondrop="drop(event)"
-      onclick="document.getElementById('fi').click()">
-      <input type="file" id="fi" accept=".pdf" onchange="onFile(this.files[0])"/>
-      <div class="dz-icon">📄</div>
-      <div class="dz-title">WP PDF hier ablegen oder klicken</div>
-      <div class="dz-sub">Wüest Partner Location Information Report · beliebige Seitenanzahl</div>
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- MANUAL MODE -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div id="manual-mode">
+
+    <!-- Standort -->
+    <div class="card">
+      <div class="ct">Standort & Report</div>
+      <div class="g3">
+        <div class="f"><label>Gemeinde</label><input id="m-gemeinde" placeholder="z.B. Suhr"/></div>
+        <div class="f"><label>Kanton</label>
+          <select id="m-kanton">
+            <option value="AG">AG — Aargau</option><option value="ZH">ZH — Zürich</option>
+            <option value="BE">BE — Bern</option><option value="LU">LU — Luzern</option>
+            <option value="BS">BS — Basel-Stadt</option><option value="BL">BL — Basel-Landschaft</option>
+            <option value="SG">SG — St. Gallen</option><option value="TG">TG — Thurgau</option>
+            <option value="SO">SO — Solothurn</option><option value="ZG">ZG — Zug</option>
+            <option value="SZ">SZ — Schwyz</option><option value="GR">GR — Graubünden</option>
+            <option value="VS">VS — Wallis</option><option value="VD">VD — Waadt</option>
+            <option value="GE">GE — Genf</option><option value="NE">NE — Neuenburg</option>
+            <option value="FR">FR — Freiburg</option><option value="JU">JU — Jura</option>
+          </select>
+        </div>
+        <div class="f"><label>Abfragedatum</label><input id="m-datum" placeholder="z.B. 22. April 2026"/></div>
+      </div>
+      <div class="g2" style="margin-top:0.85rem;">
+        <div class="f"><label>Quartal</label>
+          <select id="m-quartal">
+            <option>2026/1</option><option>2025/4</option><option>2025/3</option>
+            <option>2025/2</option><option>2025/1</option><option>2024/4</option>
+          </select>
+        </div>
+        <div class="f"><label>Reportname (optional)</label><input id="m-name" placeholder="Wird autom. generiert"/></div>
+      </div>
     </div>
 
-    <div class="progress" id="prog">
-      <div class="prog-bar-bg"><div class="prog-bar-fill" id="bar"></div></div>
-      <div class="log" id="log"></div>
+    <!-- Mietpreise -->
+    <div class="card">
+      <div class="ct">Mietpreise Mietwohnungen</div>
+      <p class="cs">Nettomiete in CHF/Monat pro Wohnung · Quelle: WP «price spectrums per property», Spalte Suhr</p>
+      <div class="mt-wrap">
+        <table class="mt" id="miete-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">Zimmer</th>
+              <th>Ref. m²</th>
+              <th>10. Perz.</th>
+              <th>30. Perz.</th>
+              <th>50. Perz. (Median)</th>
+              <th>70. Perz.</th>
+              <th>90. Perz.</th>
+            </tr>
+          </thead>
+          <tbody id="miete-body"></tbody>
+        </table>
+      </div>
+      <div class="ib" style="margin-top:0.75rem;">
+        <b>Wo im WP-Report:</b> Seite «Prices» → «Rental apartments: price spectrums per property (net rent in CHF per month)» → Tabelle Suhr → Zeilen 90th / 70th / 50th / 30th / 10th percentile.
+      </div>
+    </div>
+
+    <!-- EFH Kaufpreise -->
+    <div class="card">
+      <div class="ct">EFH Kaufpreise</div>
+      <p class="cs">Kaufpreis in CHF/m² · Quelle: WP «Single-family houses: price range», Spalte Suhr</p>
+      <div class="g4">
+        <div class="f"><label>10. Perz.</label><input id="efh-p10" type="number" placeholder="4750"/></div>
+        <div class="f"><label>30. Perz.</label><input id="efh-p30" type="number" placeholder="6430"/></div>
+        <div class="f"><label>50. Perz. (Median)</label><input id="efh-p50" type="number" placeholder="7390"/></div>
+        <div class="f"><label>70. Perz.</label><input id="efh-p70" type="number" placeholder="8550"/></div>
+      </div>
+      <div class="g2" style="margin-top:0.85rem;">
+        <div class="f"><label>90. Perz.</label><input id="efh-p90" type="number" placeholder="10900"/></div>
+        <div class="f"><label>YOY Preisentwicklung %</label><input id="efh-yoy" type="number" step="0.1" placeholder="0.1"/></div>
+      </div>
+    </div>
+
+    <!-- ETW Kaufpreise -->
+    <div class="card">
+      <div class="ct">ETW Kaufpreise (Eigentumswohnungen)</div>
+      <p class="cs">Kaufpreis in CHF/m² · Quelle: WP «Owner-occupied apartments: price range», Spalte Suhr</p>
+      <div class="g3">
+        <div class="f"><label>50. Perz. (Median)</label><input id="etw-p50" type="number" placeholder="7980"/></div>
+        <div class="f"><label>90. Perz.</label><input id="etw-p90" type="number" placeholder="10100"/></div>
+        <div class="f"><label>YOY Preisentwicklung %</label><input id="etw-yoy" type="number" step="0.1" placeholder="5.8"/></div>
+      </div>
+    </div>
+
+    <!-- Bodenpreise -->
+    <div class="card">
+      <div class="ct">Bodenpreise CHF/m²</div>
+      <p class="cs">Quelle: WP «Residential building land prices»</p>
+      <div class="sec">EFH (niedrige AZ)</div>
+      <div class="g3">
+        <div class="f"><label>10. Perz.</label><input id="boden-efh-p10" type="number" placeholder="810"/></div>
+        <div class="f"><label>50. Perz. (Median)</label><input id="boden-efh-p50" type="number" placeholder="1140"/></div>
+        <div class="f"><label>90. Perz.</label><input id="boden-efh-p90" type="number" placeholder="1650"/></div>
+      </div>
+      <div class="sec">MFH (hohe AZ)</div>
+      <div class="g3">
+        <div class="f"><label>10. Perz.</label><input id="boden-mfh-p10" type="number" placeholder="950"/></div>
+        <div class="f"><label>50. Perz. (Median)</label><input id="boden-mfh-p50" type="number" placeholder="1030"/></div>
+        <div class="f"><label>90. Perz.</label><input id="boden-mfh-p90" type="number" placeholder="1300"/></div>
+      </div>
+    </div>
+
+    <!-- Marktdaten -->
+    <div class="card">
+      <div class="ct">Marktdaten</div>
+      <p class="cs">Quelle: WP «Summary», «Ratings» und «Market liquidity»</p>
+
+      <div class="sec">Leerstand & Angebot</div>
+      <div class="g3">
+        <div class="f"><label>Leerstand MFH %</label><input id="m-leerMFH" type="number" step="0.1" placeholder="0.6"/><span class="hint">WP: «Multi-family houses: residential vacancies»</span></div>
+        <div class="f"><label>Leerstand EFH %</label><input id="m-leerEFH" type="number" step="0.1" placeholder="0.9"/><span class="hint">WP: «Single-family houses: vacancies»</span></div>
+        <div class="f"><label>Kapitalisierungssatz %</label><input id="m-kapSatz" type="number" step="0.1" placeholder="4.5"/><span class="hint">Marktüblicher Wert, selten direkt im WP</span></div>
+      </div>
+      <div class="g3" style="margin-top:0.85rem;">
+        <div class="f"><label>Angebotsrate Mietwohn. %</label><input id="m-angMiete" type="number" step="0.1" placeholder="3.5"/><span class="hint">WP: «Rented apartments: supply rate»</span></div>
+        <div class="f"><label>Angebotsrate ETW %</label><input id="m-angETW" type="number" step="0.1" placeholder="3.6"/><span class="hint">WP: «Owner-occupied: supply rate»</span></div>
+        <div class="f"><label>Angebotsrate EFH %</label><input id="m-angEFH" type="number" step="0.1" placeholder="1.0"/><span class="hint">WP: «Single-family: supply rate»</span></div>
+      </div>
+
+      <div class="sec">Standort & Demografie</div>
+      <div class="g3">
+        <div class="f"><label>Bev.-Wachstum 3J %</label><input id="m-bevWachstum" type="number" step="0.1" placeholder="6.6"/><span class="hint">WP: «Population development over 3 years»</span></div>
+        <div class="f"><label>Steuerlast Paare 120k %</label><input id="m-steuer" type="number" step="0.1" placeholder="8.8"/><span class="hint">WP: «Tax burden»</span></div>
+      </div>
+
+      <div class="sec">WP Ratings (1–5)</div>
+      <div class="g3">
+        <div class="f"><label>Rating EFH</label><input id="m-ratingEFH" type="number" step="0.1" min="1" max="5" placeholder="4.4"/><span class="hint">WP: «Single-family houses: overall rating»</span></div>
+        <div class="f"><label>Rating ETW</label><input id="m-ratingETW" type="number" step="0.1" min="1" max="5" placeholder="4.3"/><span class="hint">WP: «Owner-occupied: overall rating»</span></div>
+        <div class="f"><label>Rating MFH (Miete)</label><input id="m-ratingMFH" type="number" step="0.1" min="1" max="5" placeholder="3.9"/><span class="hint">WP: «Rented apartments: overall rating»</span></div>
+      </div>
+    </div>
+
+    <!-- EXPORT -->
+    <div class="success-box" id="success-box">
+      <div class="si">✅</div>
+      <strong style="color:var(--green)">JSON erstellt und heruntergeladen</strong>
+      <p>Datei in ImmoAnalyse → Tab «WP Import» reinziehen. Report erscheint in der Liste.</p>
+    </div>
+
+    <button class="btn-primary" onclick="exportJSON()">⬇ JSON generieren & herunterladen</button>
+    <button class="btn-sec" onclick="previewJSON()">👁 Vorschau anzeigen</button>
+    <div class="preview" id="json-preview"></div>
+
+    <div class="ib" style="margin-top:1rem;">
+      <b>Wo finde ich die Werte im WP-Report?</b><br>
+      Mietpreise: Seite «Prices» (ca. S. 6) · EFH/ETW Kaufpreise: Seite «Prices» (ca. S. 7–9) ·
+      Bodenpreise: Seite «Prices» (ca. S. 9–10) · Leerstand: Seite «Market liquidity» ·
+      Ratings: Seite «Ratings» · Angebot: Seite «Market liquidity» · Summary: erste Seiten.
     </div>
   </div>
 
-  <div class="card result" id="result-card">
-    <div class="ct">Extrahierte Daten</div>
-    <div class="kpi-grid" id="kpis"></div>
-    <button class="dl-btn" id="dl-btn">⬇ JSON herunterladen</button>
-    <button class="back-btn" onclick="reset()">← Neues PDF verarbeiten</button>
-    <div class="ib">
-      <b>Nächster Schritt:</b> ImmoAnalyse öffnen → Tab «WP Import» → JSON-Datei reinziehen → Report erscheint in der Liste → auswählen.
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <!-- PDF MODE -->
+  <!-- ══════════════════════════════════════════════════════════ -->
+  <div id="pdf-mode" style="display:none;">
+    <div class="card">
+      <div class="ct">PDF-Parser (Beta)</div>
+      <p class="cs">Funktioniert am besten mit vollständigen WP-Reports (alle Seiten). Bei Teilauszügen manuelle Eingabe bevorzugen.</p>
+      <div class="dz" id="dz" ondragover="ev(event,true)" ondragleave="ev(event,false)" ondrop="drop(event)" onclick="document.getElementById('fi').click()">
+        <input type="file" id="fi" accept=".pdf" onchange="onFile(this.files[0])"/>
+        <div style="font-size:2rem;margin-bottom:0.5rem;">📄</div>
+        <div style="font-size:0.9rem;font-weight:500;color:var(--text);margin-bottom:0.25rem;">WP PDF hier ablegen oder klicken</div>
+        <div style="font-size:0.75rem;color:var(--muted);">Vollständiger WP Location Information Report empfohlen</div>
+      </div>
+      <div class="prog" id="prog">
+        <div class="prog-bg"><div class="prog-fill" id="bar"></div></div>
+        <div class="log" id="log"></div>
+      </div>
+      <div class="ib">
+        <b>Tipp:</b> Nach dem PDF-Parse werden die erkannten Werte automatisch in die manuelle Eingabe übertragen — du kannst sie dort prüfen und korrigieren, bevor du exportierst.
+      </div>
     </div>
   </div>
 
 </div>
 <script>
-// Configure pdf.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc =
-  'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
 
-// ─── UI HELPERS ─────────────────────────────────────────────────────────────
-let outputData = null;
-let outputName = 'wp_export.json';
+// ─── MIETE TABLE SETUP ───────────────────────────────────────────────────────
+const ZI_DATA = [
+  {zi:'1.5', m2:35},  {zi:'2.5', m2:55},  {zi:'3.5', m2:80},
+  {zi:'4.5', m2:105}, {zi:'5.5', m2:130}, {zi:'6.5', m2:170},
+];
+const PERZ = ['p10','p30','p50','p70','p90'];
+const REF_VALS = {
+  '1.5': {p10:805,  p30:927,  p50:990,  p70:1060, p90:1210},
+  '2.5': {p10:1060, p30:1220, p50:1300, p70:1400, p90:1590},
+  '3.5': {p10:1280, p30:1480, p50:1580, p70:1690, p90:1920},
+  '4.5': {p10:1560, p30:1790, p50:1920, p70:2060, p90:2340},
+  '5.5': {p10:1790, p30:2060, p50:2210, p70:2370, p90:2690},
+  '6.5': {p10:2240, p30:2580, p50:2760, p70:2960, p90:3370},
+};
 
-function ev(e, on) { e.preventDefault(); document.getElementById('dz').classList.toggle('drag', on); }
-function drop(e) { e.preventDefault(); document.getElementById('dz').classList.remove('drag'); onFile(e.dataTransfer.files[0]); }
+(function buildMieteTable() {
+  const tbody = document.getElementById('miete-body');
+  ZI_DATA.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="zi-label">${row.zi}-Zi</td>
+      <td class="zi-m2" style="text-align:right;font-size:0.75rem;color:var(--muted);padding-right:0.5rem;">${row.m2} m²</td>
+      ${PERZ.map(pk => `<td><input type="number" id="miete-${row.zi}-${pk}" placeholder="${REF_VALS[row.zi][pk]}"/></td>`).join('')}
+    `;
+    tbody.appendChild(tr);
+  });
+})();
 
-function setStep(n) {
-  for (let i = 1; i <= 3; i++) {
-    const el = document.getElementById('step'+i);
-    el.className = 'step' + (i < n ? ' done' : i === n ? ' on' : '');
-    el.querySelector('.step-num').textContent = i < n ? '✓' : i;
-  }
+// ─── MODE TOGGLE ─────────────────────────────────────────────────────────────
+function setMode(m) {
+  document.getElementById('manual-mode').style.display = m==='manual' ? '' : 'none';
+  document.getElementById('pdf-mode').style.display    = m==='pdf'    ? '' : 'none';
+  document.getElementById('btn-manual').classList.toggle('on', m==='manual');
+  document.getElementById('btn-pdf').classList.toggle('on', m==='pdf');
 }
 
-function log(msg, cls='') {
-  const el = document.getElementById('log');
-  el.innerHTML += `<div class="${cls}">${msg}</div>`;
-  el.scrollTop = el.scrollHeight;
+// ─── BUILD JSON ───────────────────────────────────────────────────────────────
+function n(id) {
+  const v = parseFloat(document.getElementById(id)?.value);
+  return isNaN(v) ? null : v;
 }
+function s(id) { return document.getElementById(id)?.value?.trim() || ''; }
 
-function setBar(pct) {
-  document.getElementById('bar').style.width = pct + '%';
-}
+function buildData() {
+  const gemeinde = s('m-gemeinde') || 'Unbekannt';
+  const kanton   = s('m-kanton')   || 'CH';
+  const quartal  = s('m-quartal')  || 'Q?/????';
 
-function reset() {
-  document.getElementById('result-card').classList.remove('show');
-  document.getElementById('upload-card').style.display = '';
-  document.getElementById('prog').classList.remove('show');
-  document.getElementById('log').innerHTML = '';
-  document.getElementById('fi').value = '';
-  setBar(0); setStep(1);
-  outputData = null;
-}
-
-// ─── NUMBER HELPERS ──────────────────────────────────────────────────────────
-function cleanNum(s) {
-  if (!s) return null;
-  const n = parseFloat(String(s).replace(/[',\s%]/g, ''));
-  return isNaN(n) ? null : n;
-}
-
-function findNums(line, minVal = 0) {
-  const matches = [...line.matchAll(/[\d',]+(?:\.\d+)?/g)];
-  return matches.map(m => cleanNum(m[0])).filter(v => v !== null && v > minVal);
-}
-
-// ─── EXTRACTORS ──────────────────────────────────────────────────────────────
-
-function extractGemeinde(text) {
-  const m = text.match(/Municipality\s+([A-ZÄÖÜ][a-zäöü\-]+(?:\s[A-ZÄÖÜ][a-zäöü\-]+)*)/);
-  if (m) return m[1];
-  const m2 = text.match(/Gemeinde\s+([A-ZÄÖÜ][a-zäöü\-]+)/);
-  if (m2) return m2[1];
-  return 'Unbekannt';
-}
-
-function extractKanton(text) {
-  const map = { Aargau:'AG', 'Zürich':'ZH', Bern:'BE', Luzern:'LU',
-    'Basel-Stadt':'BS', 'Basel-Landschaft':'BL', 'St. Gallen':'SG',
-    Thurgau:'TG', Solothurn:'SO', Zug:'ZG', Schwyz:'SZ',
-    'Graubünden':'GR', Wallis:'VS', Waadt:'VD', Genf:'GE',
-    Neuenburg:'NE', Freiburg:'FR', Jura:'JU', Glarus:'GL', Schaffhausen:'SH' };
-  const m = text.match(new RegExp('Canton\\s+(' + Object.keys(map).join('|') + ')'));
-  return m ? (map[m[1]] || 'CH') : 'CH';
-}
-
-function extractDatum(text) {
-  const m = text.match(/Query date:\s*(\d{1,2}\s+\w+\s+\d{4})/);
-  return m ? m[1] : 'Unbekannt';
-}
-
-function extractQuartal(text) {
-  const qs = [...text.matchAll(/(\d{4}\/[1-4])/g)].map(m => m[1]);
-  return qs.length ? qs.sort().reverse()[0] : 'Q?/????';
-}
-
-function extractMiete(text) {
-  const refAreas = [35, 55, 80, 105, 130, 170];
-  const ziLabels = ['1.5','2.5','3.5','4.5','5.5','6.5'];
-  const perzKeys = ['p90','p70','p50','p30','p10'];
+  // Miete: CHF/Monat → CHF/m²/Jahr
   const miete = {};
+  ZI_DATA.forEach(row => {
+    const d = { m2: row.m2 };
+    PERZ.forEach(pk => {
+      const monthly = n(`miete-${row.zi}-${pk}`);
+      if (monthly !== null) d[pk] = Math.round((monthly * 12) / row.m2 * 10) / 10;
+    });
+    if (Object.keys(d).length > 1) miete[row.zi] = d;
+  });
 
-  // Find section
-  let start = text.indexOf('price spectrums per property');
-  if (start === -1) start = text.indexOf('CHF per month');
-  if (start === -1) return miete;
-
-  let chunk = text.slice(start, start + 4000);
-  // Cut at MS reg. Aarau
-  const msPos = chunk.indexOf('MS reg');
-  if (msPos > 0) chunk = chunk.slice(0, msPos);
-
-  const lines = chunk.split('\n');
-  const rows = {};
-
-  for (const line of lines) {
-    for (let i = 0; i < 5; i++) {
-      const lbl = ['90th','70th','50th','30th','10th'][i];
-      if (line.toLowerCase().includes(lbl) && line.toLowerCase().includes('percentil')) {
-        const nums = findNums(line, 100).filter(n => n < 20000);
-        if (nums.length >= 6) { rows[perzKeys[i]] = nums.slice(0, 6); break; }
-      }
-    }
-  }
-
-  for (let zi = 0; zi < ziLabels.length; zi++) {
-    const m2 = refAreas[zi];
-    const d = { m2 };
-    for (const pk of perzKeys) {
-      if (rows[pk] && rows[pk][zi] != null) {
-        d[pk] = Math.round((rows[pk][zi] * 12) / m2 * 10) / 10;
-      }
-    }
-    if (Object.keys(d).length > 1) miete[ziLabels[zi]] = d;
-  }
-
-  return miete;
-}
-
-function extractEFH(text) {
+  // EFH
   const efh = {};
-  const sec = text.indexOf('Single-family houses: price range (purchase price in CHF per sqm)');
-  if (sec === -1) return efh;
-  const chunk = text.slice(sec, sec + 1500);
-  const pmap = { '90th':'p90','70th':'p70','50th':'p50','30th':'p30','10th':'p10' };
-  for (const line of chunk.split('\n')) {
-    for (const [lbl, key] of Object.entries(pmap)) {
-      if (line.includes(lbl) && line.toLowerCase().includes('percenti')) {
-        const nums = findNums(line, 1000).filter(n => n < 50000);
-        if (nums.length) { efh[key] = nums[0]; break; }
-      }
-    }
-  }
-  const m = chunk.match(/YOY\s+([-\d.]+)%/);
-  if (m) efh.yoy = parseFloat(m[1]);
-  return efh;
-}
+  ['p10','p30','p50','p70','p90'].forEach(pk => { const v=n('efh-'+pk); if(v) efh[pk]=v; });
+  const efhYoy = n('efh-yoy'); if(efhYoy!==null) efh.yoy = efhYoy;
 
-function extractETW(text) {
+  // ETW
   const etw = {};
-  // Summary line: "Owner-occupied apartments (purchase price in CHF per sqm) 2026/1  7,980"
-  const m = text.match(/owner.occupied apartments \(purchase price.*?\)\s+\d{4}\/\d\s+([\d,]+)/i);
-  if (m) etw.p50 = cleanNum(m[1]);
+  ['p50','p90'].forEach(pk => { const v=n('etw-'+pk); if(v) etw[pk]=v; });
+  const etwYoy = n('etw-yoy'); if(etwYoy!==null) etw.yoy = etwYoy;
 
-  const sec = text.indexOf('Owner-occupied apartments: price range');
-  if (sec !== -1) {
-    const chunk = text.slice(sec, sec + 1200);
-    const pmap = { '90th':'p90','70th':'p70','50th':'p50','30th':'p30','10th':'p10' };
-    for (const line of chunk.split('\n')) {
-      for (const [lbl, key] of Object.entries(pmap)) {
-        if (line.includes(lbl) && line.toLowerCase().includes('percenti')) {
-          const nums = findNums(line, 1000).filter(n => n < 50000);
-          if (nums.length) { etw[key] = nums[0]; break; }
-        }
-      }
-    }
-  }
-  const m2 = text.match(/Owner-occupied apartments.*?YOY.*?([-\d.]+)%/s);
-  if (m2) etw.yoy = parseFloat(m2[1]);
-  return etw;
-}
-
-function extractBoden(text) {
+  // Boden
   const boden = {};
+  const efhBoden = {};
+  ['p10','p50','p90'].forEach(pk => { const v=n('boden-efh-'+pk); if(v) efhBoden[pk]=v; });
+  if(Object.keys(efhBoden).length) boden.efh = efhBoden;
+  const mfhBoden = {};
+  ['p10','p50','p90'].forEach(pk => { const v=n('boden-mfh-'+pk); if(v) mfhBoden[pk]=v; });
+  if(Object.keys(mfhBoden).length) boden.mfh = mfhBoden;
 
-  function parseSection(keyword) {
-    const sec = text.indexOf(keyword);
-    if (sec === -1) return null;
-    const chunk = text.slice(sec, sec + 800);
-    const vals = {};
-    for (const line of chunk.split('\n')) {
-      for (const [lbl, key] of [['90th','p90'],['50th','p50'],['10th','p10']]) {
-        if (line.includes(lbl) && line.toLowerCase().includes('percenti')) {
-          const nums = findNums(line, 100).filter(n => n < 10000);
-          if (nums.length) { vals[key] = nums[0]; break; }
-        }
-      }
-    }
-    return Object.keys(vals).length ? vals : null;
-  }
+  // Markt
+  const markt = {};
+  const fields = {
+    kapSatz:'m-kapSatz', leerstandMFH:'m-leerMFH', leerstandEFH:'m-leerEFH',
+    angebotMiete:'m-angMiete', angebotETW:'m-angETW', angebotEFH:'m-angEFH',
+    bevWachstum3J:'m-bevWachstum', steuerlastPaare120k:'m-steuer',
+    rating_efh:'m-ratingEFH', rating_etw:'m-ratingETW', rating_mfh:'m-ratingMFH',
+  };
+  Object.entries(fields).forEach(([key, id]) => { const v=n(id); if(v!==null) markt[key]=v; });
+  if(!markt.kapSatz) markt.kapSatz = 4.5; // Sicherheits-Fallback
 
-  const mfh = parseSection('Multi-family houses: price range for developed building land');
-  if (mfh) boden.mfh = mfh;
-  const efh = parseSection('Single-family houses: price range for developed building land');
-  if (efh) boden.efh = efh;
-  return boden;
+  const name = s('m-name') || `${gemeinde} ${kanton} — Wüest Partner`;
+
+  return {
+    name, gemeinde, kanton,
+    datum: s('m-datum') || new Date().toLocaleDateString('de-CH'),
+    quartal, miete, etw, efh, boden, markt
+  };
 }
 
-function extractMarkt(text) {
-  const markt = { kapSatz: 4.5 };
+function exportJSON() {
+  const data = buildData();
+  const json = JSON.stringify(data, null, 2);
+  const gemeinde = (data.gemeinde || 'WP').replace(/[^a-zA-Z0-9]/g,'_');
+  const q = (data.quartal || 'export').replace('/','_');
+  const filename = `${gemeinde}_${q}.json`;
 
-  function find(pattern, flags = 'is') {
-    const m = text.match(new RegExp(pattern, flags));
-    if (m) return parseFloat(m[1].replace(',', '.'));
-    return null;
-  }
+  const blob = new Blob([json], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
 
-  // Leerstand aus Summary-Tabelle
-  const lMFH = find('Multi.family houses.*?vacanc.*?([\\d.]+)\\s*%');
-  if (lMFH) markt.leerstandMFH = lMFH;
-  const lEFH = find('Single.family houses.*?vacanc.*?([\\d.]+)\\s*%');
-  if (lEFH) markt.leerstandEFH = lEFH;
-
-  // Angebotsraten
-  const am = find('Rented apartments.*?supply rate\\s+\\d{4}\\/\\d\\s+([\\d.]+)\\s*%');
-  if (am) markt.angebotMiete = am;
-  const ae = find('Owner.occupied.*?supply rate\\s+\\d{4}\\/\\d\\s+([\\d.]+)\\s*%');
-  if (ae) markt.angebotETW = ae;
-  const aefh = find('Single.family.*?supply rate\\s+\\d{4}\\/\\d\\s+([\\d.]+)\\s*%');
-  if (aefh) markt.angebotEFH = aefh;
-
-  // Bevölkerungswachstum
-  const bev = find('Population development over 3 years\\s+([\\d.]+)\\s*%', 'i');
-  if (bev) markt.bevWachstum3J = bev;
-
-  // Steuern
-  const st = find('120[,\\s]*000[^%\\d]*([\\d.]+)\\s*%');
-  if (st) markt.steuerlastPaare120k = st;
-
-  // Ratings
-  const refh = find('Single.family houses.*?Overall rating\\s+([\\d.]+)');
-  if (refh) markt.rating_efh = refh;
-  const rmfh = find('Rented apartments.*?Overall rating\\s+([\\d.]+)');
-  if (rmfh) markt.rating_mfh = rmfh;
-  const retw = find('Owner.occupied.*?Overall rating\\s+([\\d.]+)');
-  if (retw) markt.rating_etw = retw;
-
-  return markt;
+  document.getElementById('success-box').classList.add('show');
+  document.getElementById('json-preview').classList.remove('show');
+  if(typeof gtag!=='undefined') gtag('event','wp_json_export',{gemeinde:data.gemeinde});
 }
 
-// ─── MAIN PROCESSOR ──────────────────────────────────────────────────────────
-async function onFile(file) {
-  if (!file || file.type !== 'application/pdf') {
-    alert('Bitte eine PDF-Datei auswählen.');
-    return;
-  }
+function previewJSON() {
+  const data = buildData();
+  const pre = document.getElementById('json-preview');
+  pre.textContent = JSON.stringify(data, null, 2);
+  pre.classList.toggle('show');
+}
 
-  setStep(2);
-  document.getElementById('upload-card').style.display = '';
+// ─── PDF PARSER ───────────────────────────────────────────────────────────────
+function ev(e, on){ e.preventDefault(); document.getElementById('dz').classList.toggle('drag',on); }
+function drop(e){ e.preventDefault(); document.getElementById('dz').classList.remove('drag'); onFile(e.dataTransfer.files[0]); }
+
+function log(msg, cls=''){
+  const el=document.getElementById('log');
+  el.innerHTML+=`<div class="${cls}">${msg}</div>`;
+  el.scrollTop=el.scrollHeight;
+}
+function setBar(p){ document.getElementById('bar').style.width=p+'%'; }
+
+function cleanNum(s){
+  if(!s) return null;
+  const n=parseFloat(String(s).replace(/[',\s%]/g,''));
+  return isNaN(n)?null:n;
+}
+function findNums(line, minVal=0){
+  return [...line.matchAll(/[\d',]+(?:\.\d+)?/g)]
+    .map(m=>cleanNum(m[0])).filter(v=>v!==null&&v>minVal);
+}
+
+async function onFile(file){
+  if(!file||file.type!=='application/pdf'){alert('Bitte PDF auswählen.');return;}
   document.getElementById('prog').classList.add('show');
-  document.getElementById('log').innerHTML = '';
+  document.getElementById('log').innerHTML='';
   setBar(5);
-  log(`📄 Datei: <b>${file.name}</b> (${(file.size/1024).toFixed(0)} KB)`);
+  log(`📄 <b>${file.name}</b> (${(file.size/1024).toFixed(0)} KB)`);
 
   try {
-    // Read PDF
-    const arrayBuffer = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
-    const pageCount = pdf.numPages;
-    log(`✓ ${pageCount} Seiten erkannt`, 'ok');
-    setBar(15);
+    const buf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({data:buf}).promise;
+    log(`✓ ${pdf.numPages} Seiten`, 'ok');
+    setBar(10);
 
-    // Extract text from all pages
-    let fullText = '';
-    for (let i = 1; i <= pageCount; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      // Reconstruct text preserving rough layout
-      const items = content.items;
-      let pageText = '';
-      let lastY = null;
-      for (const item of items) {
-        if (lastY !== null && Math.abs(item.transform[5] - lastY) > 5) {
-          pageText += '\n';
-        }
-        pageText += item.str + ' ';
-        lastY = item.transform[5];
+    let text='';
+    for(let i=1;i<=pdf.numPages;i++){
+      const page=await pdf.getPage(i);
+      const content=await page.getTextContent();
+      let pt='', lastY=null;
+      for(const item of content.items){
+        if(lastY!==null&&Math.abs(item.transform[5]-lastY)>4) pt+='\n';
+        pt+=item.str+' ';
+        lastY=item.transform[5];
       }
-      fullText += pageText + '\n';
-      if (i % 10 === 0 || i === pageCount) {
-        setBar(15 + Math.round((i / pageCount) * 55));
-        log(`  Seite ${i}/${pageCount} verarbeitet...`);
-      }
+      text+=pt+'\n';
+      if(i%10===0||i===pdf.numPages) setBar(10+Math.round((i/pdf.numPages)*65));
     }
+    log(`✓ Text extrahiert (${text.length.toLocaleString()} Zeichen)`, 'ok');
+    setBar(80);
 
-    log(`✓ Text extrahiert (${fullText.length.toLocaleString()} Zeichen)`, 'ok');
-    setBar(72);
-
-    // Extract data
-    log('🔍 Analysiere Marktdaten...');
-    const gemeinde = extractGemeinde(fullText);
-    const kanton   = extractKanton(fullText);
-    const datum    = extractDatum(fullText);
-    const quartal  = extractQuartal(fullText);
-
-    log(`📍 Standort: <b>${gemeinde}</b>, ${kanton} · ${quartal}`, 'ok');
-    setBar(78);
-
-    const miete = extractMiete(fullText);
-    log(`🏘️ Mietpreise: ${Object.keys(miete).length} Zimmertypen ${Object.keys(miete).length >= 4 ? '✓' : '⚠ (evtl. Seite 6 fehlt)'}`
-      , Object.keys(miete).length >= 4 ? 'ok' : 'warn');
-    setBar(83);
-
-    const efh = extractEFH(fullText);
-    log(`🏡 EFH-Preise: ${Object.keys(efh).length} Felder ${efh.p50 ? '✓' : '⚠'}`, efh.p50 ? 'ok' : 'warn');
-    setBar(87);
-
-    const etw = extractETW(fullText);
-    log(`🏠 ETW-Preise: ${Object.keys(etw).length} Felder ${etw.p50 ? '✓' : '⚠ (evtl. im Summary)'}`, etw.p50 ? 'ok' : 'warn');
-    setBar(91);
-
-    const boden = extractBoden(fullText);
-    log(`🌍 Bodenpreise: ${Object.keys(boden).length} Typen`, Object.keys(boden).length ? 'ok' : 'warn');
-    setBar(95);
-
-    const markt = extractMarkt(fullText);
-    const marktFields = Object.keys(markt).length;
-    log(`📈 Marktdaten: ${marktFields} Felder extrahiert`, marktFields > 3 ? 'ok' : 'warn');
+    // Fill in fields from parsed text
+    fillFromText(text);
     setBar(100);
+    log('✅ Werte in Eingabemaske übertragen — bitte prüfen und ggf. korrigieren!', 'ok');
 
-    // Build output
-    const data = {
-      name:     `${gemeinde} ${kanton} — Wüest Partner`,
-      gemeinde, kanton, datum, quartal,
-      miete, etw, efh, boden, markt
-    };
+    // Switch to manual mode so user can review
+    setTimeout(()=>{
+      setMode('manual');
+      window.scrollTo({top:0,behavior:'smooth'});
+    }, 1500);
 
-    outputData = JSON.stringify(data, null, 2);
-    outputName = `${gemeinde.replace(/[^a-zA-Z0-9]/g,'_')}_${quartal.replace('/','_')}.json`;
-
-    log(`<br>✅ <b>Fertig! JSON bereit zum Herunterladen.</b>`, 'ok');
-
-    // Show result
-    showResult(data);
-
-  } catch (err) {
+  } catch(err){
     log(`❌ Fehler: ${err.message}`, 'err');
-    log('Bitte prüfen ob das PDF nicht passwortgeschützt ist.', 'err');
     setBar(0);
   }
 }
 
-function showResult(data) {
-  setStep(3);
+function fillFromText(text){
+  // Gemeinde
+  const gm = text.match(/Municipality\s+([A-ZÄÖÜ][a-zäöü\-]+(?:\s[A-ZÄÖÜ][a-zäöü\-]+)*)/);
+  if(gm){ document.getElementById('m-gemeinde').value=gm[1]; log(`📍 Gemeinde: ${gm[1]}`, 'ok'); }
 
-  // Build KPI cards
-  const kpis = [
-    ['Standort', data.gemeinde + ', ' + data.kanton, 'ok'],
-    ['Quartal', data.quartal, 'ok'],
-    ['Mietpreise', Object.keys(data.miete).length + ' Zimmertypen',
-      Object.keys(data.miete).length >= 4 ? 'ok' : 'warn'],
-    ['EFH Median', data.efh.p50 ? 'CHF ' + data.efh.p50.toLocaleString('de-CH') + '/m²' : 'Fehlt',
-      data.efh.p50 ? 'ok' : 'miss'],
-    ['ETW Median', data.etw.p50 ? 'CHF ' + data.etw.p50.toLocaleString('de-CH') + '/m²' : 'Fehlt',
-      data.etw.p50 ? 'ok' : 'warn'],
-    ['Bodenpreise', Object.keys(data.boden).length + ' Typen',
-      Object.keys(data.boden).length ? 'ok' : 'warn'],
-    ['Kap.-Satz', (data.markt.kapSatz || '—') + '%', 'warn'],
-    ['Leerstand MFH', data.markt.leerstandMFH ? data.markt.leerstandMFH + '%' : 'n/a',
-      data.markt.leerstandMFH ? 'ok' : 'warn'],
-    ['WP-Rating EFH', data.markt.rating_efh ? data.markt.rating_efh + '/5' : 'n/a',
-      data.markt.rating_efh ? 'ok' : 'warn'],
-  ];
+  // Datum & Quartal
+  const dm=text.match(/Query date:\s*(\d{1,2}\s+\w+\s+\d{4})/);
+  if(dm) document.getElementById('m-datum').value=dm[1];
 
-  document.getElementById('kpis').innerHTML = kpis.map(([l,v,c]) =>
-    `<div class="kpi"><div class="kl">${l}</div><div class="kv ${c}">${v}</div></div>`
-  ).join('');
+  const qs=[...text.matchAll(/(\d{4}\/[1-4])/g)].map(m=>m[1]).sort().reverse();
+  if(qs.length){
+    const sel=document.getElementById('m-quartal');
+    for(const opt of sel.options){ if(opt.value===qs[0]){ opt.selected=true; break; } }
+  }
 
-  // Download handler
-  document.getElementById('dl-btn').onclick = () => {
-    const blob = new Blob([outputData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = outputName; a.click();
-    URL.revokeObjectURL(url);
-    if (typeof gtag !== 'undefined') gtag('event', 'wp_json_download', { file: outputName });
-  };
+  // Mietpreise: suche CHF/Monat Tabelle
+  const mieteStart = text.indexOf('price spectrums per property');
+  if(mieteStart!==-1){
+    let chunk = text.slice(mieteStart, mieteStart+4000);
+    const msPos = chunk.indexOf('MS reg');
+    if(msPos>0) chunk=chunk.slice(0,msPos);
+    const lines=chunk.split('\n');
+    const pRows={};
+    for(const line of lines){
+      for(let i=0;i<5;i++){
+        const lbl=['90th','70th','50th','30th','10th'][i];
+        const pk=PERZ[4-i]; // p10..p90
+        if(line.toLowerCase().includes(lbl)&&line.toLowerCase().includes('percentil')){
+          const nums=findNums(line,100).filter(n=>n<20000);
+          if(nums.length>=6){ pRows[pk]=nums.slice(0,6); break; }
+        }
+      }
+    }
+    ZI_DATA.forEach((row,zi_i)=>{
+      PERZ.forEach(pk=>{
+        if(pRows[pk]&&pRows[pk][zi_i]!=null){
+          const el=document.getElementById(`miete-${row.zi}-${pk}`);
+          if(el) el.value=pRows[pk][zi_i];
+        }
+      });
+    });
+    if(Object.keys(pRows).length) log(`🏘️ Mietpreise: ${Object.keys(pRows).length} Perzentilzeilen gefunden`, 'ok');
+    else log('⚠️ Mietpreise nicht erkannt — bitte manuell eintragen', 'warn');
+  }
 
-  document.getElementById('result-card').classList.add('show');
+  // EFH Preise
+  const efhSec = text.indexOf('Single-family houses: price range (purchase price in CHF per sqm)');
+  if(efhSec!==-1){
+    const chunk=text.slice(efhSec,efhSec+1200);
+    const pmap={'90th':'p90','70th':'p70','50th':'p50','30th':'p30','10th':'p10'};
+    let found=0;
+    for(const line of chunk.split('\n')){
+      for(const [lbl,key] of Object.entries(pmap)){
+        if(line.includes(lbl)&&line.toLowerCase().includes('percenti')){
+          const nums=findNums(line,1000).filter(n=>n<50000);
+          if(nums.length){
+            const el=document.getElementById('efh-'+key);
+            if(el){el.value=nums[0];found++;}
+          }
+        }
+      }
+    }
+    if(found) log(`🏡 EFH-Preise: ${found} Felder erkannt`, 'ok');
+  }
+
+  // ETW aus Summary
+  const em=text.match(/owner.occupied apartments \(purchase price.*?\)\s+\d{4}\/\d\s+([\d,]+)/i);
+  if(em){
+    const v=cleanNum(em[1]);
+    if(v){document.getElementById('etw-p50').value=v; log('🏠 ETW Medianpreis erkannt','ok');}
+  }
+
+  // Bodenpreise EFH
+  const bEFH=text.indexOf('Single-family houses: price range for developed building land');
+  if(bEFH!==-1){
+    const chunk=text.slice(bEFH,bEFH+600);
+    for(const line of chunk.split('\n')){
+      if(line.includes('90th')&&line.toLowerCase().includes('percenti')){const n=findNums(line,100).filter(n=>n<8000);if(n.length){document.getElementById('boden-efh-p90').value=n[0];}}
+      if(line.includes('50th')&&line.toLowerCase().includes('percenti')){const n=findNums(line,100).filter(n=>n<8000);if(n.length){document.getElementById('boden-efh-p50').value=n[0];}}
+      if(line.includes('10th')&&line.toLowerCase().includes('percenti')){const n=findNums(line,100).filter(n=>n<8000);if(n.length){document.getElementById('boden-efh-p10').value=n[0];}}
+    }
+    log('🌍 Bodenpreise EFH erkannt','ok');
+  }
+
+  // Bodenpreise MFH
+  const bMFH=text.indexOf('Multi-family houses: price range for developed building land');
+  if(bMFH!==-1){
+    const chunk=text.slice(bMFH,bMFH+600);
+    for(const line of chunk.split('\n')){
+      if(line.includes('90th')&&line.toLowerCase().includes('percenti')){const n=findNums(line,100).filter(n=>n<8000);if(n.length){document.getElementById('boden-mfh-p90').value=n[0];}}
+      if(line.includes('50th')&&line.toLowerCase().includes('percenti')){const n=findNums(line,100).filter(n=>n<8000);if(n.length){document.getElementById('boden-mfh-p50').value=n[0];}}
+      if(line.includes('10th')&&line.toLowerCase().includes('percenti')){const n=findNums(line,100).filter(n=>n<8000);if(n.length){document.getElementById('boden-mfh-p10').value=n[0];}}
+    }
+    log('🌍 Bodenpreise MFH erkannt','ok');
+  }
+
+  // Leerstand
+  const lMFH=text.match(/Multi.family houses.*?vacanc.*?([\d.]+)\s*%/is);
+  if(lMFH){document.getElementById('m-leerMFH').value=parseFloat(lMFH[1]);log('📊 Leerstand MFH erkannt','ok');}
+  const lEFH=text.match(/Single.family houses.*?vacanc.*?([\d.]+)\s*%/is);
+  if(lEFH) document.getElementById('m-leerEFH').value=parseFloat(lEFH[1]);
+
+  // Bev.-Wachstum
+  const bev=text.match(/Population development over 3 years\s+([\d.]+)\s*%/i);
+  if(bev) document.getElementById('m-bevWachstum').value=parseFloat(bev[1]);
+
+  // Ratings
+  const refh=text.match(/Single.family houses.*?Overall rating\s+([\d.]+)/is);
+  if(refh) document.getElementById('m-ratingEFH').value=parseFloat(refh[1]);
+  const rmfh=text.match(/Rented apartments.*?Overall rating\s+([\d.]+)/is);
+  if(rmfh) document.getElementById('m-ratingMFH').value=parseFloat(rmfh[1]);
+  const retw=text.match(/Owner.occupied.*?Overall rating\s+([\d.]+)/is);
+  if(retw) document.getElementById('m-ratingETW').value=parseFloat(retw[1]);
 }
 </script>
 </body>
