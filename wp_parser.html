@@ -106,7 +106,7 @@
   <div class="header">
     <p class="eyebrow">ImmoAnalyse · Hilfstool</p>
     <h1>WP <span>Dateneingabe</span></h1>
-    <p class="sub">Wüest Partner Marktdaten erfassen und als JSON für ImmoAnalyse exportieren.</p>
+    <p class="sub">WP Marktdaten erfassen und als JSON für ImmoAnalyse exportieren.</p>
   </div>
 
   <!-- MODE TOGGLE -->
@@ -173,6 +173,32 @@
       </div>
       <div class="ib" style="margin-top:0.75rem;">
         <b>Wo im WP-Report:</b> Seite «Prices» → «Rental apartments: price spectrums per property (net rent in CHF per month)» → Tabelle Suhr → Zeilen 90th / 70th / 50th / 30th / 10th percentile.
+      </div>
+    </div>
+
+    <!-- ETW Kaufpreise nach Zimmertyp -->
+    <div class="card">
+      <div class="ct">Kaufpreise Eigentumswohnungen (ETW)</div>
+      <p class="cs">Kaufpreis in CHF/Wohnung · Quelle: WP «price spectrums per property (purchase price in CHF)», Spalte Suhr</p>
+      <div class="mt-wrap">
+        <table class="mt" id="etw-table">
+          <thead>
+            <tr>
+              <th style="text-align:left">Zimmer</th>
+              <th>Ref. m²</th>
+              <th>10. Perz.</th>
+              <th>30. Perz.</th>
+              <th>50. Perz. (Median)</th>
+              <th>70. Perz.</th>
+              <th>90. Perz.</th>
+            </tr>
+          </thead>
+          <tbody id="etw-body"></tbody>
+        </table>
+      </div>
+      <div class="ib" style="margin-top:0.75rem;">
+        <b>Wo im WP-Report:</b> Seite «Prices» → «Owner-occupied apartments: price spectrums per property (purchase price in CHF)» → Tabelle Suhr.
+        Flächen: 1 Zi=35m², 2 Zi=60m², 3 Zi=90m², 4 Zi=120m², 5 Zi=155m², 6 Zi=180m².
       </div>
     </div>
 
@@ -313,6 +339,21 @@ const REF_VALS = {
   '6.5': {p10:2240, p30:2580, p50:2760, p70:2960, p90:3370},
 };
 
+// ETW Kaufpreise nach Zimmertyp (WP Referenzflächen)
+const ETW_DATA = [
+  {zi:'1', m2:35},  {zi:'2', m2:60},  {zi:'3', m2:90},
+  {zi:'4', m2:120}, {zi:'5', m2:155}, {zi:'6', m2:180},
+];
+// Richtwerte CHF/Wohnung (Suhr Median als Referenz — CHF 7'980/m²)
+const ETW_REF = {
+  '1': {p10:null, p30:null, p50:279000,  p70:null, p90:354000},
+  '2': {p10:null, p30:null, p50:479000,  p70:null, p90:606000},
+  '3': {p10:null, p30:null, p50:718000,  p70:null, p90:909000},
+  '4': {p10:null, p30:null, p50:958000,  p70:null, p90:1212000},
+  '5': {p10:null, p30:null, p50:1237000, p70:null, p90:1566000},
+  '6': {p10:null, p30:null, p50:1436000, p70:null, p90:1818000},
+};
+
 (function buildMieteTable() {
   const tbody = document.getElementById('miete-body');
   ZI_DATA.forEach(row => {
@@ -321,6 +362,20 @@ const REF_VALS = {
       <td class="zi-label">${row.zi}-Zi</td>
       <td class="zi-m2" style="text-align:right;font-size:0.75rem;color:var(--muted);padding-right:0.5rem;">${row.m2} m²</td>
       ${PERZ.map(pk => `<td><input type="number" id="miete-${row.zi}-${pk}" placeholder="${REF_VALS[row.zi][pk]}"/></td>`).join('')}
+    `;
+    tbody.appendChild(tr);
+  });
+})();
+
+(function buildETWTable() {
+  const tbody = document.getElementById('etw-body');
+  ETW_DATA.forEach(row => {
+    const ref = ETW_REF[row.zi] || {};
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="zi-label">${row.zi}-Zi</td>
+      <td class="zi-m2" style="text-align:right;font-size:0.75rem;color:var(--muted);padding-right:0.5rem;">${row.m2} m²</td>
+      ${PERZ.map(pk => `<td><input type="number" id="etwzi-${row.zi}-${pk}" placeholder="${ref[pk] ? ref[pk].toLocaleString('de-CH') : '—'}"/></td>`).join('')}
     `;
     tbody.appendChild(tr);
   });
@@ -357,6 +412,17 @@ function buildData() {
     if (Object.keys(d).length > 1) miete[row.zi] = d;
   });
 
+  // ETW per Zimmertyp: CHF/Wohnung (absoluter Kaufpreis)
+  const etwZi = {};
+  ETW_DATA.forEach(row => {
+    const d = { m2: row.m2 };
+    PERZ.forEach(pk => {
+      const v = n(`etwzi-${row.zi}-${pk}`);
+      if (v !== null) d[pk] = v;
+    });
+    if (Object.keys(d).length > 1) etwZi[row.zi] = d;
+  });
+
   // EFH
   const efh = {};
   ['p10','p30','p50','p70','p90'].forEach(pk => { const v=n('efh-'+pk); if(v) efh[pk]=v; });
@@ -387,12 +453,12 @@ function buildData() {
   Object.entries(fields).forEach(([key, id]) => { const v=n(id); if(v!==null) markt[key]=v; });
   if(!markt.kapSatz) markt.kapSatz = 4.5; // Sicherheits-Fallback
 
-  const name = s('m-name') || `${gemeinde} ${kanton} — Wüest Partner`;
+  const name = s('m-name') || `${gemeinde} ${kanton} — WP`;
 
   return {
     name, gemeinde, kanton,
     datum: s('m-datum') || new Date().toLocaleDateString('de-CH'),
-    quartal, miete, etw, efh, boden, markt
+    quartal, miete, etwZi, etw, efh, boden, markt
   };
 }
 
