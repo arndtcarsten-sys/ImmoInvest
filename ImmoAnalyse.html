@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>ImmoAnalyse · Wüest Partner</title>
+  <title>ImmoAnalyse · WP</title>
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-FTK322V1MR"></script>
   <script>
@@ -237,25 +237,7 @@
 <script type="text/babel">
 const { useState, useMemo, useRef, useCallback } = React;
 
-// ─── DEMO REPORT ─────────────────────────────────────────────────────────────
-const DEMO = {
-  id:"suhr-2026-q1", name:"Suhr AG — Wüest Partner", gemeinde:"Suhr", kanton:"AG",
-  datum:"22.04.2026", quartal:"Q1/2026",
-  miete:{
-    "1.5":{p10:276,p30:317,p50:340,p70:363,p90:415,m2:35},
-    "2.5":{p10:231,p30:266,p50:284,p70:305,p90:347,m2:55},
-    "3.5":{p10:192,p30:222,p50:237,p70:254,p90:288,m2:80},
-    "4.5":{p10:178,p30:205,p50:219,p70:235,p90:267,m2:105},
-    "5.5":{p10:165,p30:190,p50:204,p70:219,p90:248,m2:130},
-    "6.5":{p10:158,p30:182,p50:195,p70:209,p90:239,m2:170},
-  },
-  etw:{p50:7980,p90:10100,yoy:5.8},
-  efh:{p10:4750,p30:6430,p50:7390,p70:8550,p90:10900,yoy:0.1},
-  boden:{efh:{p10:810,p50:1140,p90:1650},mfh:{p10:950,p50:1030,p90:1300}},
-  markt:{leerstandMFH:0.6,leerstandEFH:0.9,angebotMiete:3.5,angebotETW:3.6,angebotEFH:1.0,
-    bevWachstum3J:6.6,steuerlastPaare120k:8.8,rating_efh:4.4,rating_etw:4.3,rating_mfh:3.9,kapSatz:4.5}
-};
-
+// ─── HELPERS ─────────────────────────────────────────────────────────────────
 const ZI = ["1.5","2.5","3.5","4.5","5.5","6.5"];
 const SEGS = ["p10","p30","p50","p70","p90"];
 const SLBL = {p10:"10%",p30:"30%",p50:"50%",p70:"70%",p90:"90%"};
@@ -287,7 +269,21 @@ const CMP_COLORS=["#C9A84C","#4A8FD4","#3DAA77"];
 function loadSaved(){try{return JSON.parse(localStorage.getItem("immo_saved")||"[]");}catch{return[];}}
 function writeSaved(arr){try{localStorage.setItem("immo_saved",JSON.stringify(arr));}catch{}}
 
-const defaultMix=()=>ZI.map(zi=>({zi,anzahl:"",m2:"",seg:"p50",on:false,manMiete:""}));
+const defaultMix=()=>[
+  ...ZI.map(zi=>({zi,type:"wohnung",
+    // Miete
+    onMiete:false, anzahlMiete:"", m2Miete:"", seg:"p50", manMiete:"",
+    // Verkauf
+    onVerkauf:false, anzahlVerkauf:"", m2Verkauf:"", manVerkauf:"",
+    // Eigennutzung
+    onEigen:false, anzahlEigen:"",
+  })),
+  {zi:"PP",type:"parkplatz",
+    onMiete:false, anzahlMiete:"", m2Miete:"", seg:"p50", manMiete:"",
+    onVerkauf:false, anzahlVerkauf:"", m2Verkauf:"", manVerkauf:"",
+    onEigen:false, anzahlEigen:"",
+  },
+];
 const defaultSan=()=>[
   {id:1,beschrieb:"Fassadensanierung",einheit:"",anzahl:"",kosten:0},
   {id:2,beschrieb:"Dach / Flachdach",einheit:"",anzahl:"",kosten:0},
@@ -297,8 +293,8 @@ let sanId=4;
 
 function App(){
   const [tab,setTab]=useState(0);
-  const [reports,setReports]=useState([DEMO]);
-  const [activeId,setActiveId]=useState(DEMO.id);
+  const [reports,setReports]=useState([]);
+  const [activeId,setActiveId]=useState(null);
   const [drag,setDrag]=useState(false);
   const [manualMode,setManualMode]=useState(false);
   const [sanOpen,setSanOpen]=useState(false);
@@ -319,6 +315,7 @@ function App(){
     h1Pct:"66.7", h1Zins:"1.5",
     h2Pct:"13.3", h2Zins:"2.2", h2Jahre:"15",
     ekPctField:"20",
+    manKredit:"", manEK:"",  // manuelle Überschreibung Kredit/EK
   });
   const fileRef=useRef();
 
@@ -333,7 +330,7 @@ function App(){
       id:"p-"+Date.now(), name, savedAt:new Date().toLocaleDateString("de-CH"),
       form, manualMode, sanPos,
       snapshot: R ? {
-        kp:R.kp, gi:R.gi, jsm:R.jsm, noi:R.noi,
+        kp:R.kp, objektkosten:R.objektkosten, verkaufErloes:R.verkaufErloes, nettoInv:R.nettoInv, gi:R.nettoInv, jsm:R.jsm, noi:R.noi,
         brutto:R.brutto, netto:R.netto,
         ekRend:R.ekRend, ekRendOhneAmort:R.ekRendOhneAmort,
         cashflowVorAmort:R.cashflowVorAmort, cashflowNachAmort:R.cashflowNachAmort,
@@ -380,9 +377,10 @@ function App(){
       let newR;
       try{
         const p=JSON.parse(e.target.result);
-        newR={...DEMO,...p,id:"imp-"+Date.now()};
+        newR={...p,id:"imp-"+Date.now()};
       }catch{
-        newR={...DEMO,id:"imp-"+Date.now(),name:file.name.replace(/\.[^.]+$/,""),datum:new Date().toLocaleDateString("de-CH")};
+        newR={id:"imp-"+Date.now(),name:file.name.replace(/\.[^.]+$/,""),datum:new Date().toLocaleDateString("de-CH"),
+          quartal:"—",miete:{},etw:{},efh:{},boden:{},markt:{kapSatz:4.5}};
       }
       setReports(rs=>[...rs,newR]);
       setActiveId(newR.id);
@@ -418,46 +416,84 @@ function App(){
       // MFH: nach jsm
     }
 
-    // ── Mietertrag aus Wohnungsmix ──
-    let ertrag=[], jsm=0;
-    form.mix.filter(m=>m.on&&m.anzahl&&m.m2).forEach(m=>{
-      const anz=parseFloat(m.anzahl)||0;
-      const qm=parseFloat(m.m2)||0;
+    // ── Mietertrag aus Miete-Mix ──
+    let ertragMiete=[], jsm=0;
+    form.mix.forEach(m=>{
+      if(!m.onMiete||!m.anzahlMiete) return;
+      const isPP=m.type==="parkplatz";
+      const anz=parseFloat(m.anzahlMiete)||0;
+      const qm=parseFloat(m.m2Miete)||0;
       let mMt=0;
-      if(manualMode){
-        // Manueller Modus: direkte CHF/Mt. Eingabe pro Einheit
-        mMt=(parseFloat(m.manMiete)||0)*anz;
-      } else {
-        const d=report?.miete[m.zi]; if(!d)return;
+      const manVal=parseFloat(m.manMiete)||0;
+      if(manVal>0){
+        // Manueller Wert hat immer Priorität
+        mMt=manVal*anz;
+      } else if(!manualMode&&!isPP){
+        // Fallback: WP-Referenz (nur wenn kein manueller Wert)
+        const d=report?.miete[m.zi]; if(!d) return;
         const mQm=d[m.seg]||d.p50;
-        mMt=mQm*qm/12*anz;
+        mMt=mQm*(qm||1)/12*anz;
       }
       const jm=mMt*12;
       jsm+=jm;
-      ertrag.push({zi:m.zi,anz,qm,seg:m.seg,mMt,jm,manual:manualMode});
+      ertragMiete.push({zi:m.zi,anz,qm,seg:m.seg,mMt,jm,isPP});
+    });
+
+    // ── Verkaufserlöse aus Verkauf-Mix ──
+    let ertragVerkauf=[], verkaufErloes=0;
+    form.mix.forEach(m=>{
+      if(!m.onVerkauf||!m.anzahlVerkauf) return;
+      const isPP=m.type==="parkplatz";
+      const anz=parseFloat(m.anzahlVerkauf)||0;
+      const vkPreis=parseFloat(m.manVerkauf)||0;
+      const erloes=vkPreis*anz;
+      verkaufErloes+=erloes;
+      ertragVerkauf.push({zi:m.zi,anz,qm:parseFloat(m.m2Verkauf)||0,vkPreis,erloes,isPP});
+    });
+
+    // Eigennutzung (Zählung, kein Ertrag)
+    let eigennutzung=[];
+    form.mix.forEach(m=>{
+      if(!m.onEigen||!m.anzahlEigen) return;
+      eigennutzung.push({zi:m.zi,anz:parseFloat(m.anzahlEigen)||0,isPP:m.type==="parkplatz"});
     });
 
     if(form.typ==="MFH"&&!kpInput&&jsm>0){
       kp=(jsm/(kapSatz/100))*af*zf;
     }
 
-    // Kosten
-    const nkJ=form.nkMode==="pct"?kp*(parseFloat(form.nkPct)||0)/100:(parseFloat(form.nkCHF)||0)*12;
+    // ── Investitionsrechnung ──
+    const objektkosten=kp+sanTotal;
+    const verkaufErloesVal=verkaufErloes;
+    const nettoInv=Math.max(0,objektkosten-verkaufErloesVal);
+    const gi=nettoInv;
+
+    // Bewirtschaftungskosten
+    const nkJ=form.nkMode==="pct"?nettoInv*(parseFloat(form.nkPct)||0)/100:(parseFloat(form.nkCHF)||0)*12;
     const vwJ=form.vwMode==="pct"?jsm*(parseFloat(form.vwPct)||0)/100:(parseFloat(form.vwCHF)||0)*12;
-    const uhJ=form.uhMode==="pct"?kp*(parseFloat(form.uhPct)||0)/100:(parseFloat(form.uhCHF)||0)*12;
+    const uhJ=form.uhMode==="pct"?nettoInv*(parseFloat(form.uhPct)||0)/100:(parseFloat(form.uhCHF)||0)*12;
     const lpct=parseFloat(form.leerPct)||leerstandRef;
     const lvJ=jsm*(lpct/100);
     const totK=nkJ+vwJ+uhJ+lvJ;
     const noi=jsm-totK;
 
-    // ── Finanzierung: 2 Hypotheken ──
-    const gi=kp+sanTotal;
+    // ── Finanzierung ──
+    // Kreditsumme = Kaufpreis + Sanierung - Verkaufserlöse (automatisch)
+    // kann manuell überschrieben werden
+    const autoKredit=Math.max(0, objektkosten - verkaufErloesVal);
+    const kredit=parseFloat(form.manKredit)||autoKredit;
+
+    // Eigenkapital = gi - kredit (automatisch aus 20%-Default)
+    const autoEK=gi*0.20;
+    const ekBetrag=parseFloat(form.manEK)||(gi-kredit>0?gi-kredit:autoEK);
+    const ekPct=gi>0?ekBetrag/gi:0.2;
+
+    // Hypotheken-Aufteilung auf Kreditsumme
     const h1Pct=parseFloat(form.h1Pct)||66.7;
     const h2Pct=parseFloat(form.h2Pct)||13.3;
-    const ekPct=Math.max(0,(100-h1Pct-h2Pct))/100;
-    const h1Betrag=gi*(h1Pct/100);
-    const h2Betrag=gi*(h2Pct/100);
-    const ekBetrag=gi*ekPct;
+    const totalHypoPct=(h1Pct+h2Pct)/100;
+    const h1Betrag=kredit*(h1Pct/(h1Pct+h2Pct));
+    const h2Betrag=kredit*(h2Pct/(h1Pct+h2Pct));
     const h1ZinsJ=h1Betrag*(parseFloat(form.h1Zins)||0)/100;
     const h2ZinsJ=h2Betrag*(parseFloat(form.h2Zins)||0)/100;
     const h2Jahre=parseFloat(form.h2Jahre)||15;
@@ -466,30 +502,37 @@ function App(){
     const cashflowVorAmort=noi-totalZinsJ;
     const cashflowNachAmort=noi-totalZinsJ-h2AmortJ;
 
-    // Renditen
+    // Renditen auf Netto-Investition
     const brutto=gi>0?(jsm/gi)*100:0;
     const netto=gi>0?(noi/gi)*100:0;
     const cfRend=gi>0?(cashflowVorAmort/gi)*100:0;
-    // EK-Rendite mit Tilgung: Cashflow nach Amort. ÷ EK (Liquiditätsbetrachtung)
     const ekRend=ekBetrag>0?(cashflowNachAmort/ekBetrag)*100:0;
-    // EK-Rendite ohne Tilgung: Cashflow vor Amort. ÷ EK (Gesamtrenditebetrachtung, Tilgung = Vermögensaufbau)
     const ekRendOhneAmort=ekBetrag>0?(cashflowVorAmort/ekBetrag)*100:0;
 
     return{
-      kp,gi,sanTotal,jsm,ertrag,
+      kp,sanTotal,objektkosten,verkaufErloes:verkaufErloesVal,nettoInv,gi,
+      autoKredit,kredit,autoEK,ekBetrag,ekPct,
+      ertragMiete,ertragVerkauf,eigennutzung,jsm,
       nkJ,vwJ,uhJ,lvJ,lpct,totK,noi,
-      h1Betrag,h2Betrag,ekBetrag,ekPct,
+      h1Betrag,h2Betrag,
       h1ZinsJ,h2ZinsJ,h2AmortJ,h2Jahre,totalZinsJ,
       cashflowVorAmort,cashflowNachAmort,
       brutto,netto,cfRend,ekRend,ekRendOhneAmort,af,zf
     };
   },[form,report,sanTotal,manualMode]);
 
-  // ── MIX TOTALS (live) ────────────────────────────────────────────────────
-  const mixTotalMt=useMemo(()=>form.mix.filter(m=>m.on&&m.anzahl&&m.m2).reduce((s,m)=>{
-    if(manualMode) return s+(parseFloat(m.manMiete)||0)*(parseFloat(m.anzahl)||0);
-    const d=report?.miete[m.zi]; if(!d)return s;
-    return s+(d[m.seg]||d.p50)*parseFloat(m.m2)/12*(parseFloat(m.anzahl)||0);
+  // ── MIX TOTALS (live, Miete) — immer manuellen Wert nutzen ─────────────
+  const mixTotalMt=useMemo(()=>form.mix.reduce((s,m)=>{
+    if(!m.onMiete||!m.anzahlMiete) return s;
+    const anz=parseFloat(m.anzahlMiete)||0;
+    // Priorität: manueller Wert → WP-Referenz als Fallback
+    const manVal=parseFloat(m.manMiete)||0;
+    if(manVal>0) return s+manVal*anz;
+    // Kein manueller Wert → WP-Referenz (nur wenn nicht manualMode)
+    if(manualMode||m.type==="parkplatz") return s;
+    const d=report?.miete[m.zi]; if(!d) return s;
+    const qm=parseFloat(m.m2Miete)||0;
+    return s+(d[m.seg]||d.p50)*qm/12*anz;
   },0),[form.mix,report,manualMode]);
 
   const mixTotalJ=mixTotalMt*12;
@@ -501,7 +544,7 @@ function App(){
       <div className="header">
         <div>
           <h1>Immo<span>Analyse</span></h1>
-          <p>Ertragsrechnung & Bewertung · Schweiz · Wüest Partner</p>
+          <p>Ertragsrechnung & Bewertung · Schweiz · WP</p>
         </div>
         <div className={manualMode?"wp-chip":"wp-chip"} style={manualMode?{background:"rgba(217,92,92,0.1)",border:"1px solid rgba(217,92,92,0.3)",color:"var(--red)"}:{}}>
           {manualMode?"✏️ Manueller Modus — keine WP-Daten":"📊 "+report?.name+" · "+report?.quartal}
@@ -525,7 +568,7 @@ function App(){
             {/* MODE TOGGLE */}
             <div className="mode-toggle">
               <button className={`mode-btn ${!manualMode?"on wp":""}`} onClick={()=>setManualMode(false)}>
-                📊 Mit Wüest Partner Report
+                📊 Mit WP Report
               </button>
               <button className={`mode-btn ${manualMode?"on manual":""}`} onClick={()=>setManualMode(true)}>
                 ✏️ Manuelle Eingabe (ohne WP)
@@ -537,7 +580,7 @@ function App(){
               <div>
                 <div className="manual-alert">
                   <span>⚠️</span>
-                  <div><strong>Kein Wüest Partner Report aktiv.</strong> Kaufpreise, Marktsegmente und Mietpreise basieren auf manuellen Eingaben — keine Marktdatenvalidierung. Felder ohne WP-Referenz sind rot markiert.</div>
+                  <div><strong>Kein WP Report aktiv.</strong> Kaufpreise, Marktsegmente und Mietpreise basieren auf manuellen Eingaben — keine Marktdatenvalidierung. Felder ohne WP-Referenz sind rot markiert.</div>
                 </div>
                 <div className="card">
                   <div className="ct">Manuelle Marktparameter</div>
@@ -568,7 +611,7 @@ function App(){
               /* ── WP MODUS ── */
               <div>
                 <div className="card">
-                  <div className="ct">Wüest Partner Report importieren</div>
+                  <div className="ct">WP Report importieren</div>
                   <p className="cs">JSON-Export hochladen · oder Demo-Report Suhr AG verwenden</p>
                   <div className={`dz ${drag?"drag":""}`}
                     onDragOver={e=>{e.preventDefault();setDrag(true);}}
@@ -588,7 +631,7 @@ function App(){
                         <div><div className="ri-n">{r.name}</div><div className="ri-m">{r.gemeinde}, {r.kanton} · {r.datum}</div></div>
                         <div style={{display:"flex",alignItems:"center",gap:"0.5rem"}}>
                           <span className="ri-b">{r.quartal}</span>
-                          {r.id!==DEMO.id&&<button className="db" onClick={e=>{e.stopPropagation();setReports(rs=>rs.filter(x=>x.id!==r.id));if(activeId===r.id)setActiveId(DEMO.id);}}>✕</button>}
+                          {r.id!==DEMO?.id&&<button className="db" onClick={e=>{e.stopPropagation();setReports(rs=>rs.filter(x=>x.id!==r.id));if(activeId===r.id)setActiveId(reports.filter(x=>x.id!==r.id)[0]?.id||null);}}>✕</button>}
                         </div>
                       </div>
                     ))}
@@ -738,7 +781,7 @@ function App(){
                   </div>
                   {sanTotal>0&&R&&R.kp>0&&(
                     <div className="ib" style={{marginTop:"0.65rem"}}>
-                      <b>Gesamtinvestition:</b> {chf(R.kp)} Kaufpreis + {chf(sanTotal)} Sanierung = <b>{chf(R.gi)}</b> · Renditeberechnung auf Gesamtinvestition.
+                      <b>Objektkosten:</b> {chf(R.kp)} Kaufpreis + {chf(sanTotal)} Sanierung = <b>{chf(R.objektkosten)}</b> · Netto-Investition nach Verkaufserlösen: <b>{chf(R.nettoInv)}</b>
                     </div>
                   )}
                 </div>
@@ -757,84 +800,112 @@ function App(){
           <div>
             <div className="card">
               <div className="ct">Wohnungsmix</div>
-              <p className="cs">Situation nach Umbau / Anbau / Neubau — Zimmertypen aktivieren · Anzahl, Fläche & Marktsegment pro Typ</p>
-              {manualMode&&<div className="manual-alert"><span>⚠️</span><div>Manueller Modus — Miete als <strong>CHF/Mt. pro Einheit</strong> eingeben. WP-Marktsegmente nicht verfügbar.</div></div>}
-              <table className="mt">
+              <p className="cs">Miete, Verkauf und Eigennutzung sind vollständig unabhängig — jede Zeile separat aktivieren und befüllen</p>
+              {manualMode&&<div className="manual-alert"><span>⚠️</span><div>Manueller Modus — keine WP-Referenzpreise verfügbar.</div></div>}
+
+              <div style={{overflowX:"auto"}}>
+              <table className="mt" style={{minWidth:860}}>
                 <thead>
                   <tr>
-                    <th style={{width:32}}></th>
-                    <th>Typ</th>
-                    <th>Anzahl</th>
-                    <th>m²/Einheit</th>
-                    {manualMode
-                      ?<th style={{color:"var(--red)"}}>⚠ Miete CHF/Mt./Einheit</th>
-                      :<th>Marktsegment</th>}
-                    <th style={{textAlign:"right"}}>Nettomiete/Mt.</th>
-                    <th style={{textAlign:"right"}}>Jahressollmiete</th>
+                    <th style={{textAlign:"left",minWidth:80}}>Typ</th>
+                    <th style={{borderLeft:"2px solid #3DAA77",paddingLeft:8,color:"#3DAA77"}} colSpan={4}>🏠 Vermietung</th>
+                    <th style={{borderLeft:"2px solid #4A8FD4",paddingLeft:8,color:"#4A8FD4"}} colSpan={4}>🏷 Verkauf</th>
+                    <th style={{borderLeft:"2px solid #C9A84C",paddingLeft:8,color:"#C9A84c"}} colSpan={2}>🏡 Eigennutzung</th>
+                  </tr>
+                  <tr>
+                    <th style={{textAlign:"left"}}></th>
+                    <th style={{borderLeft:"2px solid #3DAA7722",color:"#3DAA77",fontSize:"0.62rem"}}>An</th>
+                    <th style={{color:"#3DAA77",fontSize:"0.62rem"}}>Anzahl</th>
+                    <th style={{color:"#3DAA77",fontSize:"0.62rem"}}>m²</th>
+                    <th style={{color:"#3DAA77",fontSize:"0.62rem",textAlign:"right"}}>CHF/Mt./Einh.</th>
+                    <th style={{borderLeft:"2px solid #4A8FD422",color:"#4A8FD4",fontSize:"0.62rem"}}>An</th>
+                    <th style={{color:"#4A8FD4",fontSize:"0.62rem"}}>Anzahl</th>
+                    <th style={{color:"#4A8FD4",fontSize:"0.62rem"}}>m²</th>
+                    <th style={{color:"#4A8FD4",fontSize:"0.62rem",textAlign:"right"}}>CHF/Einheit</th>
+                    <th style={{borderLeft:"2px solid #C9A84C22",color:"var(--gold)",fontSize:"0.62rem"}}>An</th>
+                    <th style={{color:"var(--gold)",fontSize:"0.62rem"}}>Anzahl</th>
                   </tr>
                 </thead>
                 <tbody>
                   {form.mix.map((m,idx)=>{
-                    const d=report?.miete[m.zi];
+                    const isPP=m.type==="parkplatz";
+                    const d=isPP?null:report?.miete[m.zi];
                     const mQm=d?d[m.seg]||d.p50:0;
-                    const qm=parseFloat(m.m2)||(d?.m2||0);
-                    const anz=parseFloat(m.anzahl)||0;
-                    const mt=manualMode
-                      ?(parseFloat(m.manMiete)||0)*anz
-                      :mQm*qm/12*anz;
-                    const j=mt*12;
+                    const qmM=parseFloat(m.m2Miete)||(d?.m2||0);
+                    // WP Referenz Miete
+                    const refMiete=d&&qmM?Math.round(mQm*qmM/12):null;
+                    // WP Referenz Verkauf
+                    const etwKey=m.zi.replace(".5","");
+                    const etwD=report?.etwZi?.[etwKey];
+                    const refVk=etwD?etwD[m.seg]||etwD.p50:null;
+
                     return(
-                      <tr key={m.zi} style={{opacity:m.on?1:0.4,transition:"opacity .2s"}}>
-                        <td>
-                          <label className="tog">
-                            <input type="checkbox" checked={m.on} onChange={()=>setMix(idx,"on",!m.on)}/>
-                            <span className="ts"/>
-                          </label>
+                      <tr key={m.zi} style={{borderBottom:"1px solid var(--faint)"}}>
+                        {/* Label */}
+                        <td style={{fontWeight:500,fontSize:"0.84rem",padding:"0.4rem 0.5rem",whiteSpace:"nowrap"}}>
+                          {isPP?"🅿️ Parkplatz":`${m.zi}-Zi`}
+                          {!isPP&&<div style={{fontSize:"0.62rem",color:"var(--muted)"}}>Ref.{d?.m2||"—"}m²</div>}
                         </td>
-                        <td><div style={{fontSize:"0.84rem",fontWeight:500}}>{m.zi}-Zi</div><div style={{fontSize:"0.65rem",color:"var(--muted)"}}>Ref. {d?.m2||"—"}m²</div></td>
-                        <td><input type="number" min="0" value={m.anzahl} disabled={!m.on} placeholder="0" onChange={e=>setMix(idx,"anzahl",e.target.value)}/></td>
-                        <td><input type="number" min="0" value={m.m2} disabled={!m.on} placeholder={d?.m2||"—"} onChange={e=>setMix(idx,"m2",e.target.value)}/></td>
-                        <td>
-                          {manualMode?(
-                            <input type="number" min="0" value={m.manMiete} disabled={!m.on}
-                              placeholder="z.B. 1800"
-                              className="no-data"
-                              style={{borderColor:"rgba(217,92,92,0.5)"}}
-                              onChange={e=>setMix(idx,"manMiete",e.target.value)}/>
-                          ):(
-                            <div>
-                              <div className="sp">
-                                {SEGS.filter(k=>d?.[k]).map(k=>(
-                                  <button key={k} className={`pill sm ${m.seg===k?"on":""}`}
-                                    onClick={()=>m.on&&setMix(idx,"seg",k)}
-                                    style={{cursor:m.on?"pointer":"default"}}>
-                                    {SLBL[k]}
-                                  </button>
-                                ))}
-                              </div>
-                              {d&&<div style={{fontSize:"0.65rem",color:"var(--muted)",marginTop:"0.15rem"}}>{chf(mQm*(d?.m2||qm)/12)}/Mt. (Ref.)</div>}
-                            </div>
-                          )}
+
+                        {/* ── MIETE ── */}
+                        <td style={{borderLeft:"2px solid #3DAA7722",padding:"0 4px"}}>
+                          <label className="tog"><input type="checkbox" checked={m.onMiete} onChange={()=>setMix(idx,"onMiete",!m.onMiete)}/><span className="ts"/></label>
                         </td>
-                        <td style={{textAlign:"right",fontSize:"0.83rem"}}>
-                          {m.on&&anz>0&&(qm>0||manualMode)?<span style={{color:manualMode?"var(--red)":"var(--gold)"}}>{chf(mt)}</span>:<span style={{color:"var(--muted)"}}>—</span>}
+                        <td><input type="number" min="0" value={m.anzahlMiete} disabled={!m.onMiete} placeholder="0" onChange={e=>setMix(idx,"anzahlMiete",e.target.value)} style={{width:52}}/></td>
+                        <td>{isPP?<span style={{color:"var(--muted)",fontSize:"0.75rem",padding:"0 8px"}}>—</span>:<input type="number" min="0" value={m.m2Miete} disabled={!m.onMiete} placeholder={d?.m2||"—"} onChange={e=>setMix(idx,"m2Miete",e.target.value)} style={{width:58}}/>}</td>
+                        <td style={{textAlign:"right"}}>
+                          <input type="number" min="0" value={m.manMiete} disabled={!m.onMiete}
+                            placeholder={isPP?"150":refMiete?String(refMiete):"1800"}
+                            style={{width:80,borderColor:"rgba(61,170,119,0.5)",background:"rgba(61,170,119,0.04)",textAlign:"right"}}
+                            onChange={e=>setMix(idx,"manMiete",e.target.value)}/>
+                          {!manualMode&&refMiete&&<div style={{fontSize:"0.6rem",color:"var(--muted)",marginTop:2}}>WP Ref: {chf(refMiete)}</div>}
                         </td>
-                        <td style={{textAlign:"right",fontSize:"0.83rem"}}>
-                          {m.on&&anz>0&&(qm>0||manualMode)?chf(j):<span style={{color:"var(--muted)"}}>—</span>}
+
+                        {/* ── VERKAUF ── */}
+                        <td style={{borderLeft:"2px solid #4A8FD422",padding:"0 4px"}}>
+                          <label className="tog"><input type="checkbox" checked={m.onVerkauf} onChange={()=>setMix(idx,"onVerkauf",!m.onVerkauf)}/><span className="ts"/></label>
                         </td>
+                        <td><input type="number" min="0" value={m.anzahlVerkauf} disabled={!m.onVerkauf} placeholder="0" onChange={e=>setMix(idx,"anzahlVerkauf",e.target.value)} style={{width:52}}/></td>
+                        <td>{isPP?<span style={{color:"var(--muted)",fontSize:"0.75rem",padding:"0 8px"}}>—</span>:<input type="number" min="0" value={m.m2Verkauf} disabled={!m.onVerkauf} placeholder={d?.m2||"—"} onChange={e=>setMix(idx,"m2Verkauf",e.target.value)} style={{width:58}}/>}</td>
+                        <td style={{textAlign:"right"}}>
+                          <input type="number" min="0" value={m.manVerkauf} disabled={!m.onVerkauf}
+                            placeholder={isPP?"25000":refVk?String(Math.round(refVk)):"850000"}
+                            style={{width:95,borderColor:"rgba(74,143,212,0.5)",background:"rgba(74,143,212,0.04)",textAlign:"right"}}
+                            onChange={e=>setMix(idx,"manVerkauf",e.target.value)}/>
+                          {!manualMode&&refVk&&<div style={{fontSize:"0.6rem",color:"var(--muted)",marginTop:2}}>WP Ref: {chf(refVk)}</div>}
+                        </td>
+
+                        {/* ── EIGENNUTZUNG ── */}
+                        <td style={{borderLeft:"2px solid #C9A84C22",padding:"0 4px"}}>
+                          <label className="tog"><input type="checkbox" checked={m.onEigen} onChange={()=>setMix(idx,"onEigen",!m.onEigen)}/><span className="ts"/></label>
+                        </td>
+                        <td><input type="number" min="0" value={m.anzahlEigen} disabled={!m.onEigen} placeholder="0" onChange={e=>setMix(idx,"anzahlEigen",e.target.value)} style={{width:52}}/></td>
                       </tr>
                     );
                   })}
                 </tbody>
                 <tfoot>
-                  <tr>
-                    <td colSpan={5}/>
-                    <td style={{textAlign:"right",fontWeight:600,color:"var(--gold)",fontSize:"0.85rem",borderTop:"1px solid var(--border)",paddingTop:"0.5rem"}}>{chf(mixTotalMt)}</td>
-                    <td style={{textAlign:"right",fontWeight:600,color:"var(--gold)",fontSize:"0.85rem",borderTop:"1px solid var(--border)",paddingTop:"0.5rem"}}>{chf(mixTotalJ)}</td>
+                  <tr style={{borderTop:"1px solid var(--border)"}}>
+                    <td style={{fontSize:"0.72rem",color:"var(--muted)",padding:"0.5rem"}}>Total</td>
+                    <td colSpan={3} style={{borderLeft:"2px solid #3DAA7722"}}/>
+                    <td style={{textAlign:"right",fontWeight:600,color:"#3DAA77",fontSize:"0.83rem",paddingTop:"0.5rem"}}>
+                      {chf(mixTotalMt)}/Mt.
+                      <div style={{fontSize:"0.68rem",color:"var(--muted)"}}>{chf(mixTotalJ)}/Jahr</div>
+                    </td>
+                    <td colSpan={3} style={{borderLeft:"2px solid #4A8FD422"}}/>
+                    <td style={{textAlign:"right",fontWeight:600,color:"#4A8FD4",fontSize:"0.83rem",paddingTop:"0.5rem"}}>
+                      {chf(form.mix.reduce((s,m)=>s+(m.onVerkauf?(parseFloat(m.manVerkauf)||0)*(parseFloat(m.anzahlVerkauf)||0):0),0))}
+                    </td>
+                    <td colSpan={2} style={{borderLeft:"2px solid #C9A84C22"}}/>
                   </tr>
                 </tfoot>
               </table>
-              <div className="ib">{manualMode?<span><b style={{color:"var(--red)"}}>⚠ Manueller Modus:</b> Mieten ohne WP-Marktdatenvalidierung. Bitte eigene Marktrecherche durchführen.</span>:<span><b>Gilt für alle Objekttypen (EFH, ETW, MFH):</b> Der Wohnungsmix bildet die Vermietungssituation <b>nach</b> Umbau, Anbau oder Neubau ab. Nettomietpreise gem. WP {report?.name} · {report?.quartal}.</span>}</div>
+              </div>
+
+              <div className="ib" style={{marginTop:"0.75rem"}}>
+                <b>Miete & Verkauf vollständig unabhängig:</b> Dieselbe Wohnung kann gleichzeitig in beiden Spalten aktiviert sein (z.B. Planung mit Szenariovergleich). Eigennutzung = keine Einnahmen, erscheint nur im Ergebnis als Information.
+                {!manualMode&&<span> WP-Referenzpreise in grau zur Orientierung.</span>}
+              </div>
             </div>
             <div className="nav">
               <button className="nb" onClick={()=>setTab(1)}>← Zurück</button>
@@ -843,7 +914,7 @@ function App(){
           </div>
         )}
 
-        {/* ═══ TAB 3: KOSTEN ═══ */}
+                {/* ═══ TAB 3: KOSTEN ═══ */}
         {tab===3&&(
           <div>
             {/* Nebenkosten */}
@@ -908,6 +979,40 @@ function App(){
                 <span className="hint">{manualMode?`Referenz aus Tab 1: ${form.manLeerstand}% (manuell)`:`WP Suhr: MFH ${report?.markt.leerstandMFH}% · EFH ${report?.markt.leerstandEFH}%`}</span>
               </div>
 
+              <div className="sec">Kreditsumme & Eigenkapital</div>
+
+              <div className="g2" style={{marginBottom:"1.25rem"}}>
+                <div className="f">
+                  <label>Kreditsumme CHF</label>
+                  <input type="number" value={form.manKredit}
+                    onChange={e=>sf("manKredit",e.target.value)}
+                    placeholder={R?Math.round(R.autoKredit).toString():"Automatisch"}/>
+                  <span className="hint">
+                    {R?<>Auto: Kaufpreis {chf(R.kp)}{R.sanTotal>0?` + Sanierung ${chf(R.sanTotal)}`:""}{R.verkaufErloes>0?` − Verkauf ${chf(R.verkaufErloes)}`:""} = <strong>{chf(R.autoKredit)}</strong></>:"Wird aus Kaufpreis + Sanierung − Verkaufserlöse berechnet"}
+                  </span>
+                </div>
+                <div className="f">
+                  <label>Eigenkapital CHF</label>
+                  <input type="number" value={form.manEK}
+                    onChange={e=>sf("manEK",e.target.value)}
+                    placeholder={R?Math.round(R.gi*0.20).toString():"20% der Gesamtinvestition"}/>
+                  <span className="hint">
+                    {R?<>Auto: 20% von {chf(R.gi)} = <strong>{chf(R.gi*0.20)}</strong>{" · "}Gesamtinvestition − Kredit = {chf(R.gi-(parseFloat(form.manKredit)||R.autoKredit))}</>:"Default: 20% der Gesamtinvestition"}
+                  </span>
+                </div>
+              </div>
+
+              {R&&(
+                <div style={{background:"var(--faint)",borderRadius:9,padding:"0.85rem",marginBottom:"1.25rem",fontSize:"0.8rem",color:"var(--muted)",lineHeight:1.6}}>
+                  <strong style={{color:"var(--gold)"}}>Verwendete Werte:</strong>{" "}
+                  Kredit <strong style={{color:"var(--text)"}}>{chf(R.kredit)}</strong>
+                  {" · "}EK <strong style={{color:"var(--green)"}}>{chf(R.ekBetrag)}</strong>
+                  {" · "}EK-Quote <strong style={{color:"var(--text)"}}>{pct(R.ekPct*100,1)}</strong>
+                  {(parseFloat(form.manKredit)||parseFloat(form.manEK))&&
+                    <span style={{color:"var(--gold)"}}> · Manuell überschrieben</span>}
+                </div>
+              )}
+
               <div className="sec">Hypothekarstruktur</div>
 
               {/* 1. Hypothek */}
@@ -917,9 +1022,9 @@ function App(){
                 </div>
                 <div className="g3">
                   <div className="f">
-                    <label>Anteil % der Gesamtinvestition</label>
+                    <label>Anteil % der Kreditsumme</label>
                     <input type="number" step="0.1" value={form.h1Pct} onChange={e=>sf("h1Pct",e.target.value)}/>
-                    <span className="hint">{R?chf(R.h1Betrag):""}</span>
+                    <span className="hint">{R?chf(R.h1Betrag)+" von "+chf(R.kredit):""}</span>
                   </div>
                   <div className="f">
                     <label>Zinssatz % p.a.</label>
@@ -940,9 +1045,9 @@ function App(){
                 </div>
                 <div className="g3">
                   <div className="f">
-                    <label>Anteil % der Gesamtinvestition</label>
+                    <label>Anteil % der Kreditsumme</label>
                     <input type="number" step="0.1" value={form.h2Pct} onChange={e=>sf("h2Pct",e.target.value)}/>
-                    <span className="hint">{R?chf(R.h2Betrag):""}</span>
+                    <span className="hint">{R?chf(R.h2Betrag)+" von "+chf(R.kredit):""}</span>
                   </div>
                   <div className="f">
                     <label>Zinssatz % p.a.</label>
@@ -962,10 +1067,10 @@ function App(){
                 <div style={{background:"var(--faint)",borderRadius:9,padding:"1rem"}}>
                   <div style={{fontSize:"0.7rem",color:"var(--muted)",textTransform:"uppercase",letterSpacing:"0.08em",marginBottom:"0.65rem"}}>Struktur-Übersicht</div>
                   <div className="g4" style={{gap:"0.65rem"}}>
+                    <div className="kpi"><div className="kl">Kredit total</div><div className="kv g">{chf(R.kredit)}</div><div className="ks">Kaufpreis+San.−Verkauf</div></div>
                     <div className="kpi"><div className="kl">1. Hypothek ({form.h1Pct}%)</div><div className="kv g">{chf(R.h1Betrag)}</div><div className="ks">{form.h1Zins}% = {chf(R.h1ZinsJ)}/J.</div></div>
                     <div className="kpi"><div className="kl">2. Hypothek ({form.h2Pct}%)</div><div className="kv" style={{color:"var(--blue,#4A8FD4)"}}>{chf(R.h2Betrag)}</div><div className="ks">{form.h2Zins}% + Amort. {chf(R.h2AmortJ)}/J.</div></div>
-                    <div className="kpi"><div className="kl">Eigenkapital ({(R.ekPct*100).toFixed(1)}%)</div><div className="kv gr">{chf(R.ekBetrag)}</div></div>
-                    <div className="kpi"><div className="kl">Total Zinslast p.a.</div><div className="kv" style={{color:"var(--red)"}}>{chf(R.totalZinsJ)}</div><div className="ks">{chf(R.totalZinsJ/12)}/Mt.</div></div>
+                    <div className="kpi"><div className="kl">Eigenkapital ({pct(R.ekPct*100,1)})</div><div className="kv gr">{chf(R.ekBetrag)}</div><div className="ks">von {chf(R.gi)} GI</div></div>
                   </div>
                 </div>
               )}
@@ -1018,56 +1123,83 @@ function App(){
                     </div>
                     <div style={{textAlign:"right"}}>
                       <div className="hl">Marktwert / Gesamtinvestition</div>
-                      <div className="hv" style={{fontSize:"2rem"}}>{chf(R.gi||R.kp)}</div>
-                      <div className="hs">{R.sanTotal>0?`${chf(R.kp)} + ${chf(R.sanTotal)} San.`:""} Alter {Math.round(R.af*100)}% · Zustand {Math.round(R.zf*100)}%</div>
+                      <div className="hv" style={{fontSize:"2rem"}}>{chf(R.nettoInv||R.kp)}</div>
+                      <div className="hs">Kaufpreis {chf(R.kp)}{R.sanTotal>0?` + Sanierung ${chf(R.sanTotal)}`:""}{R.verkaufErloes>0?` − Erlöse ${chf(R.verkaufErloes)}`:""}</div>
                     </div>
                   </div>
                   <div className="kpis">
-                    <div className="kpi"><div className="kl">Bruttomietrendite</div><div className={`kv ${R.brutto>=4?"gr":"g"}`}>{pct(R.brutto)}</div><div className="ks">Sollmiete / Gesamtinvestition</div></div>
-                    <div className="kpi"><div className="kl">Nettomietrendite</div><div className={`kv ${R.netto>=3?"gr":"g"}`}>{pct(R.netto)}</div><div className="ks">NOI / Gesamtinvestition</div></div>
-                    <div className="kpi"><div className="kl">EK-Rendite (Liquidität)</div><div className={`kv ${R.ekRend>=5?"gr":R.ekRend>=0?"g":"re"}`}>{pct(R.ekRend)}</div><div className="ks">Cashflow nach Tilgung ÷ EK</div></div>
+                    <div className="kpi"><div className="kl">Bruttomietrendite</div><div className={`kv ${R.brutto>=4?"gr":"g"}`}>{pct(R.brutto)}</div><div className="ks">Sollmiete / Netto-Investition</div></div>
+                    <div className="kpi"><div className="kl">Nettomietrendite (NOI)</div><div className={`kv ${R.netto>=3?"gr":"g"}`}>{pct(R.netto)}</div><div className="ks">NOI / Netto-Investition</div></div>
+                    {R.verkaufErloes>0
+                      ? <div className="kpi"><div className="kl">Verkaufserlös (einmalig)</div><div className="kv" style={{color:"#4A8FD4"}}>{chf(R.verkaufErloes)}</div><div className="ks">Verkaufrendite: {pct(R.gi>0?R.verkaufErloes/R.gi*100:0)}</div></div>
+                      : <div className="kpi"><div className="kl">EK-Rendite (Liquidität)</div><div className={`kv ${R.ekRend>=5?"gr":R.ekRend>=0?"g":"re"}`}>{pct(R.ekRend)}</div><div className="ks">Cashflow nach Tilgung ÷ EK</div></div>
+                    }
                     <div className="kpi"><div className="kl">EK-Rendite (Gesamtrendite)</div><div className={`kv ${R.ekRendOhneAmort>=5?"gr":R.ekRendOhneAmort>=0?"g":"re"}`}>{pct(R.ekRendOhneAmort)}</div><div className="ks">inkl. Vermögensaufbau Tilgung</div></div>
                   </div>
                 </div>
 
                 <div className="split">
-                  {/* LEFT: ERTRAGSRECHNUNG + FINANZIERUNG */}
+                  {/* LEFT: INVESTITION + ERTRAGSRECHNUNG + FINANZIERUNG */}
                   <div>
+
+                    {/* INVESTITIONSRECHNUNG */}
                     <div className="card">
-                      <div className="ct">Ertragsrechnung</div>
-                      {(()=>{
-                        const mixQmTotal=R.ertrag.reduce((s,d)=>s+d.qm*d.anz,0);
-                        const objQm=parseFloat(form.wfEFH)||0;
-                        const diff=mixQmTotal-(objQm);
-                        return mixQmTotal>0&&(
-                          <div className="ib" style={{marginBottom:"0.85rem"}}>
-                            <b>Mietertrag aus Wohnungsmix</b> · Total {mixQmTotal.toLocaleString("de-CH")} m²
-                            {objQm>0&&diff!==0&&(
-                              <span style={{color:diff>0?"var(--green)":"var(--gold)"}}>
-                                {" "}({diff>0?"+":""}{diff.toFixed(0)} m² vs. Ausgangsfläche {objQm} m²)
-                              </span>
-                            )}
-                          </div>
-                        );
-                      })()}
+                      <div className="ct">Investitionsrechnung</div>
+                      <table className="dt">
+                        <tbody>
+                          <tr className="sect"><td colSpan={2}>Objektkosten</td></tr>
+                          <tr><td>Kaufpreis</td><td>{chf(R.kp)}</td></tr>
+                          <tr><td>Einmalsanierung / Anbau</td><td className={R.sanTotal>0?"neg":""}>{R.sanTotal>0?"-"+chf(R.sanTotal):"—"}</td></tr>
+                          <tr className="tot"><td>Total Objektkosten</td><td>{chf(R.objektkosten)}</td></tr>
+
+                          {R.ertragVerkauf.length>0&&<>
+                            <tr className="sect"><td colSpan={2}>Verkaufserlöse (Stockwerkeigentum)</td></tr>
+                            {R.ertragVerkauf.map((d,i)=>(
+                              <tr key={i}>
+                                <td>{d.isPP?"🅿️ Parkplatz":d.zi+"-Zi"}{d.anz>1?` · ${d.anz}×`:""} · {chf(d.vkPreis)}/Einh.</td>
+                                <td className="pos">+{chf(d.erloes)}</td>
+                              </tr>
+                            ))}
+                            <tr className="tot"><td>Total Verkaufserlöse</td><td className="pos">+{chf(R.verkaufErloes)}</td></tr>
+                          </>}
+
+                          <tr><td colSpan={2} style={{height:"0.4rem"}}/></tr>
+                          <tr className="tot" style={{background:"rgba(201,168,76,0.06)"}}>
+                            <td><strong>Netto-Investition</strong><div style={{fontSize:"0.68rem",color:"var(--muted)"}}>Basis für Rendite & Finanzierung</div></td>
+                            <td className="gd" style={{fontSize:"1rem"}}>{chf(R.nettoInv)}</td>
+                          </tr>
+
+                          {R.eigennutzung.length>0&&<>
+                            <tr className="sect"><td colSpan={2}>Eigennutzung (kein Ertrag)</td></tr>
+                            {R.eigennutzung.map((d,i)=>(
+                              <tr key={i}><td style={{color:"var(--muted)"}}>{d.isPP?"🅿️ Parkplatz":d.zi+"-Zi"} · {d.anz}×</td><td style={{color:"var(--muted)"}}>—</td></tr>
+                            ))}
+                          </>}
+                        </tbody>
+                      </table>
+                    </div>
+
+                    {/* ERTRAGSRECHNUNG */}
+                    <div className="card">
+                      <div className="ct">Ertragsrechnung (Miete)</div>
                       <table className="dt">
                         <thead><tr><th>Position</th><th>CHF/Mt.</th><th>CHF/Jahr</th></tr></thead>
                         <tbody>
-                          <tr className="sect"><td colSpan={3}>Ertrag</td></tr>
-                          {R.ertrag.map((d,i)=>(
+                          <tr className="sect"><td colSpan={3}>Mieteinnahmen</td></tr>
+                          {R.ertragMiete.length>0?R.ertragMiete.map((d,i)=>(
                             <tr key={i}>
-                              <td>{d.zi}{d.anz>1?` · ${d.anz}× ${d.qm}m²`:` · ${d.qm}m²`} · {SLBL[d.seg]}</td>
+                              <td>{d.isPP?"🅿️ Parkplatz":d.zi+"-Zi"}{d.anz>1?` · ${d.anz}×`:""}{d.qm>0?` · ${d.qm}m²`:""}</td>
                               <td className="gd">{chf(d.mMt)}</td>
                               <td className="gd">{chf(d.jm)}</td>
                             </tr>
-                          ))}
+                          )):<tr><td colSpan={3} style={{color:"var(--muted)",fontStyle:"italic"}}>Keine Mietwohnungen aktiviert</td></tr>}
                           <tr className="tot"><td>Brutto-Sollmiete</td><td className="gd">{chf(R.jsm/12)}</td><td className="gd">{chf(R.jsm)}</td></tr>
-                          <tr className="sect"><td colSpan={3}>Aufwand</td></tr>
+                          <tr className="sect"><td colSpan={3}>Bewirtschaftungskosten</td></tr>
                           <tr><td>Nebenkosten / Betrieb</td><td className="neg">-{chf(R.nkJ/12)}</td><td className="neg">-{chf(R.nkJ)}</td></tr>
                           <tr><td>Verwaltungskosten</td><td className="neg">-{chf(R.vwJ/12)}</td><td className="neg">-{chf(R.vwJ)}</td></tr>
                           <tr><td>Unterhalt / Rückstellung</td><td className="neg">-{chf(R.uhJ/12)}</td><td className="neg">-{chf(R.uhJ)}</td></tr>
                           <tr><td>Leerstandsverlust ({pct(R.lpct,1)})</td><td className="neg">-{chf(R.lvJ/12)}</td><td className="neg">-{chf(R.lvJ)}</td></tr>
-                          <tr className="tot"><td>Total Aufwand</td><td className="neg">-{chf(R.totK/12)}</td><td className="neg">-{chf(R.totK)}</td></tr>
+                          <tr className="tot"><td>Total Kosten</td><td className="neg">-{chf(R.totK/12)}</td><td className="neg">-{chf(R.totK)}</td></tr>
                           <tr><td colSpan={3} style={{height:"0.4rem"}}/></tr>
                           <tr className="tot"><td><strong>Nettomietertrag (NOI)</strong></td><td className="pos">{chf(R.noi/12)}</td><td className="pos">{chf(R.noi)}</td></tr>
                           <tr className="sect"><td colSpan={3}>Finanzierungsaufwand</td></tr>
@@ -1079,7 +1211,7 @@ function App(){
                             <td className={R.cashflowVorAmort>=0?"pos":"neg"}>{R.cashflowVorAmort>=0?"+":""}{chf(R.cashflowVorAmort/12)}</td>
                             <td className={R.cashflowVorAmort>=0?"pos":"neg"}>{R.cashflowVorAmort>=0?"+":""}{chf(R.cashflowVorAmort)}</td>
                           </tr>
-                          <tr><td>Amortisation 2. Hypothek (linear, {R.h2Jahre} J.)</td><td className="neg">-{chf(R.h2AmortJ/12)}</td><td className="neg">-{chf(R.h2AmortJ)}</td></tr>
+                          <tr><td>Amortisation 2. Hypo ({R.h2Jahre} J.)</td><td className="neg">-{chf(R.h2AmortJ/12)}</td><td className="neg">-{chf(R.h2AmortJ)}</td></tr>
                           <tr><td colSpan={3} style={{height:"0.3rem"}}/></tr>
                           <tr className="tot"><td><strong>Cashflow nach Amortisation</strong></td>
                             <td className={R.cashflowNachAmort>=0?"pos":"neg"}>{R.cashflowNachAmort>=0?"+":""}{chf(R.cashflowNachAmort/12)}</td>
@@ -1093,21 +1225,19 @@ function App(){
                       <div className="ct">Finanzierungsstruktur</div>
                       <table className="dt">
                         <tbody>
-                          <tr><td>Kaufpreis</td><td colSpan={2}>{chf(R.kp)}</td></tr>
-                          {R.sanTotal>0&&<tr><td>Einmalsanierung / Anbau</td><td colSpan={2} className="neg">{chf(R.sanTotal)}</td></tr>}
-                          <tr className="tot"><td>Gesamtinvestition</td><td colSpan={2} className="gd">{chf(R.gi)}</td></tr>
+                          <tr><td>Gesamtinvestition</td><td colSpan={2}>{chf(R.gi)}</td></tr>
+                          <tr><td>Kaufpreis + Sanierung − Verkauf</td><td colSpan={2} className="gd">{chf(R.kredit)}</td></tr>
+                          <tr><td>Eigenkapital ({pct(R.ekPct*100,1)})</td><td colSpan={2} className="pos">{chf(R.ekBetrag)}</td></tr>
                           <tr><td colSpan={3} style={{height:"0.3rem"}}/></tr>
-                          <tr><td>1. Hypothek ({form.h1Pct}%)</td><td colSpan={2}>{chf(R.h1Betrag)}</td></tr>
-                          <tr><td>2. Hypothek ({form.h2Pct}%)</td><td colSpan={2}>{chf(R.h2Betrag)}</td></tr>
-                          <tr><td>Eigenkapital ({(R.ekPct*100).toFixed(1)}%)</td><td colSpan={2} className="pos">{chf(R.ekBetrag)}</td></tr>
-                          <tr><td colSpan={3} style={{height:"0.3rem"}}/></tr>
+                          <tr><td>1. Hypothek ({form.h1Pct}% d. Kredit)</td><td colSpan={2}>{chf(R.h1Betrag)}</td></tr>
+                          <tr><td>2. Hypothek ({form.h2Pct}% d. Kredit)</td><td colSpan={2}>{chf(R.h2Betrag)}</td></tr>
                           <tr><td>Zins 1. Hypo ({form.h1Zins}%)</td><td className="neg">-{chf(R.h1ZinsJ/12)}/Mt.</td><td className="neg">-{chf(R.h1ZinsJ)}/J.</td></tr>
                           <tr><td>Zins 2. Hypo ({form.h2Zins}%)</td><td className="neg">-{chf(R.h2ZinsJ/12)}/Mt.</td><td className="neg">-{chf(R.h2ZinsJ)}/J.</td></tr>
                           <tr><td>Amortisation 2. Hypo ({R.h2Jahre} J.)</td><td className="neg">-{chf(R.h2AmortJ/12)}/Mt.</td><td className="neg">-{chf(R.h2AmortJ)}/J.</td></tr>
                         </tbody>
                       </table>
                       <div className="ib">
-                        <b>Stresstest (kalk. Zins 5%):</b> 1. Hypo {chf(R.h1Betrag*0.05/12)}/Mt. · 2. Hypo {chf(R.h2Betrag*0.05/12)}/Mt. · Total {chf((R.h1Betrag+R.h2Betrag)*0.05/12)}/Mt.
+                        <b>Stresstest (kalk. Zins 5%):</b> Total {chf((R.h1Betrag+R.h2Betrag)*0.05/12)}/Mt.
                         — Tragbarkeit: Bruttolohn ≥ {chf((R.h1Betrag+R.h2Betrag)*0.05/12*3*12)}/Jahr
                       </div>
                     </div>
@@ -1117,10 +1247,12 @@ function App(){
                   <div>
                     <div className="card">
                       <div className="ct">Rendite-Übersicht</div>
+
+                      <div style={{fontSize:"0.65rem",color:"var(--green)",letterSpacing:"0.08em",textTransform:"uppercase",marginBottom:"0.5rem"}}>🏠 Vermietung</div>
                       {[
-                        ["Bruttomietrendite",R.brutto,"Sollmiete ÷ Gesamtinvestition",R.brutto>=4],
+                        ["Bruttomietrendite",R.brutto,"Sollmiete ÷ Netto-Investition",R.brutto>=4],
                         ["Nettomietrendite (NOI)",R.netto,"nach Kosten & Leerstand",R.netto>=3],
-                        ["Cashflow-Rendite (vor Amort.)",R.cfRend,"Cashflow vor Tilgung ÷ GI",R.cfRend>=0],
+                        ["Cashflow-Rendite (vor Amort.)",R.cfRend,"Cashflow vor Tilgung ÷ Netto-Inv.",R.cfRend>=0],
                       ].map(([l,v,s,ok])=>(
                         <div key={l} className="rr">
                           <div><div className="rr-l">{l}</div><div className="rr-s">{s}</div></div>
@@ -1130,7 +1262,26 @@ function App(){
                           </div>
                         </div>
                       ))}
-                      {/* EK-Rendite: zwei Varianten mit Erklärung */}
+
+                      {R.verkaufErloes>0&&<>
+                        <div style={{fontSize:"0.65rem",color:"#4A8FD4",letterSpacing:"0.08em",textTransform:"uppercase",margin:"0.85rem 0 0.5rem"}}>🏷 Verkauf (Stockwerkeigentum)</div>
+                        <div className="rr">
+                          <div><div className="rr-l">Verkaufserlös (einmalig)</div><div className="rr-s">Total Erlöse aus Wohnungsverkäufen</div></div>
+                          <span className="rr-v" style={{color:"#4A8FD4"}}>{chf(R.verkaufErloes)}</span>
+                        </div>
+                        <div className="rr">
+                          <div><div className="rr-l">Verkaufsrendite</div><div className="rr-s">Erlös ÷ Objektkosten ({chf(R.objektkosten)})</div></div>
+                          <span className="rr-v" style={{color:"#4A8FD4"}}>{pct(R.objektkosten>0?R.verkaufErloes/R.objektkosten*100:0)}</span>
+                        </div>
+                        <div className="rr" style={{borderBottom:"none"}}>
+                          <div><div className="rr-l">Netto-Investition nach Verkauf</div><div className="rr-s">Verbleibende Basis für Mietrendite-Berechnung</div></div>
+                          <span className="rr-v" style={{color:"var(--gold)"}}>{chf(R.nettoInv)}</span>
+                        </div>
+                        <div className="ib">
+                          Gemischtes Modell: Verkaufserlös {chf(R.verkaufErloes)} reduziert die Investitionsbasis auf {chf(R.nettoInv)} — auf dieser Basis werden Mietrenditen und EK-Rendite berechnet.
+                        </div>
+                      </>}
+
                       <div style={{background:"var(--faint)",borderRadius:8,padding:"0.85rem",margin:"0.75rem 0 0"}}>
                         <div style={{fontSize:"0.65rem",textTransform:"uppercase",letterSpacing:"0.08em",color:"var(--muted)",marginBottom:"0.6rem"}}>Eigenkapitalrendite — zwei Betrachtungsweisen</div>
                         <div className="rr" style={{paddingTop:0}}>
@@ -1242,7 +1393,7 @@ function App(){
                           <div>
                             <div className="saved-item-name">{p.name}</div>
                             <div className="saved-item-meta">
-                              {p.snapshot?`GI: ${chf(p.snapshot.gi)} · NOI-Rendite: ${pct(p.snapshot.netto)}`:""} · {p.savedAt}
+                              {p.snapshot?`NI: ${chf(p.snapshot.nettoInv||p.snapshot.gi)} · NOI-Rendite: ${pct(p.snapshot.netto)}`:""} · {p.savedAt}
                             </div>
                           </div>
                           <div style={{display:"flex",gap:"0.4rem",flexWrap:"wrap"}}>
@@ -1379,7 +1530,7 @@ function App(){
                         <div>
                           <div className="saved-item-name">{p.name}</div>
                           <div className="saved-item-meta">
-                            {p.snapshot?`GI: ${chf(p.snapshot.gi)} · Rendite: ${pct(p.snapshot.netto)} · EK-Rendite: ${pct(p.snapshot.ekRend)}`:""} · {p.savedAt}
+                            {p.snapshot?`NI: ${chf(p.snapshot.nettoInv||p.snapshot.gi)} · Rendite: ${pct(p.snapshot.netto)} · EK-Rendite: ${pct(p.snapshot.ekRend)}`:""} · {p.savedAt}
                           </div>
                         </div>
                         <div style={{display:"flex",gap:"0.4rem"}}>
